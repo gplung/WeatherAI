@@ -2,6 +2,12 @@ const container = document.getElementById('forecastContainer');
 const addBtn = document.getElementById('addBtn');
 const cityInput = document.getElementById('cityInput');
 
+const resetBtn = document.createElement('button');
+resetBtn.textContent = 'Reset';
+resetBtn.id = 'resetBtn';
+
+document.querySelector('.controls').appendChild(resetBtn);
+
 const suggestionBox = document.createElement('div');
 suggestionBox.className = 'suggestions';
 
@@ -429,6 +435,21 @@ addBtn.addEventListener('click', async () => {
   suggestionBox.innerHTML = '';
 
   selectedCity = null;
+
+  render();
+
+});
+
+resetBtn.addEventListener('click', () => {
+
+  const confirmed =
+    confirm('Clear all saved cities?');
+
+  if (!confirmed) return;
+
+  localStorage.removeItem('weatherCities');
+
+  cities = [];
 
   render();
 

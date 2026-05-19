@@ -37,10 +37,15 @@ function saveCities() {
 }
 
 async function geocode(city) {
+
+  const cleanCity =
+    city.split(',')[0].trim();
+
   const url =
-    `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1`;
+    `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cleanCity)}&count=1`;
 
   const res = await fetch(url);
+
   const data = await res.json();
 
   if (!data.results || !data.results.length) {
@@ -51,18 +56,21 @@ async function geocode(city) {
 }
 
 async function searchCities(query) {
+
   if (query.length < 2) return [];
 
   const url =
     `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=7`;
 
   const res = await fetch(url);
+
   const data = await res.json();
 
   return data.results || [];
 }
 
 async function forecast(lat, lon, timezone) {
+
   const url =
     `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&hourly=relative_humidity_2m,temperature_2m,windspeed_10m&temperature_unit=fahrenheit&windspeed_unit=mph&timezone=${timezone}&forecast_days=10`;
 
@@ -72,6 +80,7 @@ async function forecast(lat, lon, timezone) {
 }
 
 function getPeakHumidity(dayIndex, hourly) {
+
   const start = dayIndex * 24;
   const end = start + 24;
 
@@ -80,12 +89,15 @@ function getPeakHumidity(dayIndex, hourly) {
   let wind = 0;
 
   for (let i = start; i < end; i++) {
+
     const temp = hourly.temperature_2m[i];
 
     if (temp > maxTemp) {
+
       maxTemp = temp;
       humidity = hourly.relative_humidity_2m[i];
       wind = hourly.windspeed_10m[i];
+
     }
   }
 
@@ -93,19 +105,28 @@ function getPeakHumidity(dayIndex, hourly) {
 }
 
 function shortDay(dateStr) {
-  return new Date(dateStr).toLocaleDateString('en-US', {
-    weekday: 'short'
-  });
+
+  return new Date(dateStr).toLocaleDateString(
+    'en-US',
+    { weekday: 'short' }
+  );
+
 }
 
 function shortDate(dateStr) {
-  return new Date(dateStr).toLocaleDateString('en-US', {
-    month: 'numeric',
-    day: 'numeric'
-  });
+
+  return new Date(dateStr).toLocaleDateString(
+    'en-US',
+    {
+      month: 'numeric',
+      day: 'numeric'
+    }
+  );
+
 }
 
 function deleteCity(city) {
+
   cities = cities.filter(
     c => normalizeCity(c) !== normalizeCity(city)
   );
@@ -116,6 +137,7 @@ function deleteCity(city) {
 }
 
 async function render() {
+
   container.innerHTML = "";
 
   for (const city of cities) {
@@ -132,17 +154,25 @@ async function render() {
         geo.timezone
       );
 
-      const row = document.createElement('div');
+      const row =
+        document.createElement('div');
+
       row.className = 'forecast-row';
 
-      const cityCol = document.createElement('div');
+      const cityCol =
+        document.createElement('div');
+
       cityCol.className = 'city-column';
 
       const state =
-        geo.admin1 || "";
+        geo.country_code === 'US'
+          ? geo.admin1
+          : '';
 
       const displayName =
-        `${geo.name}, ${state}`;
+        state
+          ? `${geo.name}, ${state}`
+          : geo.name;
 
       cityCol.innerHTML = `
         <button class="delete-btn" data-city="${city}">
@@ -158,7 +188,9 @@ async function render() {
         </div>
       `;
 
-      const scroll = document.createElement('div');
+      const scroll =
+        document.createElement('div');
+
       scroll.className = 'scroll-area';
 
       data.daily.time.forEach((day, i) => {
@@ -207,6 +239,7 @@ async function render() {
         `;
 
         scroll.appendChild(card);
+
       });
 
       row.appendChild(cityCol);
@@ -215,14 +248,20 @@ async function render() {
       container.appendChild(row);
 
     } catch (err) {
+
       console.error(err);
+
     }
   }
 
   document.querySelectorAll('.delete-btn').forEach(btn => {
+
     btn.addEventListener('click', () => {
+
       deleteCity(btn.dataset.city);
+
     });
+
   });
 
   syncScrolling();
@@ -246,14 +285,18 @@ function syncScrolling() {
       scrollers.forEach(other => {
 
         if (other !== scroller) {
+
           other.scrollLeft =
             scroller.scrollLeft;
+
         }
 
       });
 
       requestAnimationFrame(() => {
+
         syncing = false;
+
       });
 
     });
@@ -282,11 +325,10 @@ cityInput.addEventListener('input', async () => {
     div.className =
       'suggestion-item';
 
-    const state =
-      result.admin1 || "";
-
     const label =
-      `${result.name}, ${state}`;
+      result.admin1
+        ? `${result.name}, ${result.admin1}`
+        : result.name;
 
     div.textContent = label;
 
@@ -320,12 +362,16 @@ addBtn.addEventListener('click', async () => {
     );
 
   if (alreadyExists) {
+
     alert('City already added');
+
     return;
   }
 
   if (cities.length >= 5) {
+
     alert('Maximum of 5 cities');
+
     return;
   }
 
@@ -333,15 +379,16 @@ addBtn.addEventListener('click', async () => {
     await geocode(city);
 
   if (!geo) {
+
     alert('City not found');
+
     return;
   }
 
-  const state =
-    geo.admin1 || "";
-
   const finalName =
-    `${geo.name}, ${state}`;
+    geo.admin1
+      ? `${geo.name}, ${geo.admin1}`
+      : geo.name;
 
   cities.unshift(finalName);
 

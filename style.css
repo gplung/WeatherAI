@@ -20,7 +20,7 @@ body {
 header {
   position: sticky;
   top: 0;
-  z-index: 50;
+  z-index: 100;
   background: #0f172a;
   padding-bottom: 10px;
 }
@@ -74,20 +74,28 @@ button {
 .forecast-row {
   display: flex;
   margin-bottom: 12px;
-  background: rgba(255,255,255,0.05);
-  border-radius: 12px;
-  overflow: hidden;
+  position: relative;
 }
 
 .city-column {
   width: 95px;
   min-width: 95px;
-  background: rgba(255,255,255,0.06);
-  padding: 10px 6px;
   position: sticky;
   left: 0;
-  z-index: 20;
-  border-right: 1px solid rgba(255,255,255,0.08);
+  z-index: 50;
+
+  background: #1e293b;
+
+  padding: 10px 6px;
+
+  border-top-left-radius: 12px;
+  border-bottom-left-radius: 12px;
+
+  border-right:
+    1px solid rgba(255,255,255,0.08);
+
+  box-shadow:
+    6px 0 10px rgba(0,0,0,0.25);
 }
 
 .city-name {
@@ -104,17 +112,29 @@ button {
 
 .days-row {
   display: flex;
+
+  background:
+    rgba(255,255,255,0.05);
+
+  border-top-right-radius: 12px;
+  border-bottom-right-radius: 12px;
+
+  overflow: hidden;
 }
 
 .day-card {
   width: 95px;
   min-width: 95px;
+
   padding: 10px 8px;
-  border-right: 1px solid rgba(255,255,255,0.08);
+
+  border-right:
+    1px solid rgba(255,255,255,0.08);
 }
 
 .today-card {
-  background: rgba(59,130,246,0.18);
+  background:
+    rgba(59,130,246,0.18);
 }
 
 .day-name {
@@ -152,36 +172,60 @@ button {
 }
 
 .delete-btn {
-  background: rgba(255,255,255,0.12);
+  background:
+    rgba(255,255,255,0.12);
+
   border: none;
   color: white;
+
   width: 24px;
   height: 24px;
+
   border-radius: 50%;
+
   margin-bottom: 8px;
+
   font-size: 14px;
+
   cursor: pointer;
+
   padding: 0;
+}
+
+.delete-btn:hover {
+  background:
+    rgba(255,255,255,0.22);
 }
 
 .suggestions {
   position: absolute;
+
   top: 48px;
   left: 0;
   right: 140px;
+
   background: #1e293b;
+
   border-radius: 10px;
+
   overflow: hidden;
-  z-index: 100;
-  border: 1px solid rgba(255,255,255,0.08);
+
+  z-index: 1000;
+
+  border:
+    1px solid rgba(255,255,255,0.08);
 }
 
 .suggestion-item {
   padding: 10px;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
+
+  border-bottom:
+    1px solid rgba(255,255,255,0.06);
+
   cursor: pointer;
 }
 
 .suggestion-item:hover {
-  background: rgba(255,255,255,0.08);
+  background:
+    rgba(255,255,255,0.08);
 }

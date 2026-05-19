@@ -23,6 +23,10 @@ const weatherIcons = {
   95: "⛈️"
 };
 
+function saveCities() {
+  localStorage.setItem('weatherCities', JSON.stringify(cities));
+}
+
 async function geocode(city) {
   const url =
     `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1`;
@@ -31,10 +35,22 @@ async function geocode(city) {
   const data = await res.json();
 
   if (!data.results || !data.results.length) {
-    throw new Error(`Location not found: ${city}`);
+    return null;
   }
 
   return data.results[0];
+}
+
+async function searchCities(query) {
+  if (query.length < 2) return [];
+
+  const url =
+    `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5`;
+
+  const res = await fetch(url);
+  const data = await res.json();
+
+  return data.results || [];
 }
 
 async function forecast(lat, lon) {
@@ -79,13 +95,11 @@ function shortDate(dateStr) {
   });
 }
 
-function saveCities() {
-  localStorage.setItem('weatherCities', JSON.stringify(cities));
-}
-
 function deleteCity(city) {
   cities = cities.filter(c => c !== city);
+
   saveCities();
+
   render();
 }
 
@@ -95,6 +109,9 @@ async function render() {
   for (const city of cities) {
     try {
       const geo = await geocode(city);
+
+      if (!geo) continue;
+
       const data = await forecast(geo.latitude, geo.longitude);
 
       const row = document.createElement('div');
@@ -104,8 +121,14 @@ async function render() {
       cityCol.className = 'city-column';
 
       cityCol.innerHTML = `
-        <button class="delete-btn" data-city="${city}">✕</button>
-        <div class="city-name">${geo.name}</div>
+        <button class="delete-btn" data-city="${city}">
+          ✕
+        </button>
+
+        <div class="city-name">
+          ${geo.name}
+        </div>
+
         <div class="current-temp">
           ${Math.round(data.daily.temperature_2m_max[0])}°
         </div>
@@ -196,13 +219,25 @@ function syncScrolling() {
   });
 }
 
-addBtn.addEventListener('click', () => {
+addBtn.addEventListener('click', async () => {
   const city = cityInput.value.trim();
 
   if (!city) return;
 
+  if (cities.includes(city)) {
+    alert('City already added');
+    return;
+  }
+
   if (cities.length >= 5) {
     alert('Maximum of 5 cities');
+    return;
+  }
+
+  const geo = await geocode(city);
+
+  if (!geo) {
+    alert('City not found');
     return;
   }
 

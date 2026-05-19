@@ -1,9 +1,11 @@
-
 const container = document.getElementById('forecastContainer');
 const addBtn = document.getElementById('addBtn');
 const cityInput = document.getElementById('cityInput');
 
-const cities = JSON.parse(localStorage.getItem('weatherCities') || '["Phoenix","Denver","Rapid City"]');
+let cities = JSON.parse(
+  localStorage.getItem('weatherCities') ||
+  '["Phoenix","Denver","Rapid City"]'
+);
 
 const weatherIcons = {
   0: "☀️",
@@ -22,7 +24,9 @@ const weatherIcons = {
 };
 
 async function geocode(city) {
-  const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1`;
+  const url =
+    `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1`;
+
   const res = await fetch(url);
   const data = await res.json();
 
@@ -34,7 +38,8 @@ async function geocode(city) {
 }
 
 async function forecast(lat, lon) {
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&hourly=relative_humidity_2m,temperature_2m,windspeed_10m&temperature_unit=fahrenheit&windspeed_unit=mph&timezone=auto&forecast_days=10`;
+  const url =
+    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&hourly=relative_humidity_2m,temperature_2m,windspeed_10m&temperature_unit=fahrenheit&windspeed_unit=mph&timezone=auto&forecast_days=10`;
 
   const res = await fetch(url);
   return await res.json();
@@ -74,6 +79,16 @@ function shortDate(dateStr) {
   });
 }
 
+function saveCities() {
+  localStorage.setItem('weatherCities', JSON.stringify(cities));
+}
+
+function deleteCity(city) {
+  cities = cities.filter(c => c !== city);
+  saveCities();
+  render();
+}
+
 async function render() {
   container.innerHTML = "";
 
@@ -89,8 +104,11 @@ async function render() {
       cityCol.className = 'city-column';
 
       cityCol.innerHTML = `
+        <button class="delete-btn" data-city="${city}">✕</button>
         <div class="city-name">${geo.name}</div>
-        <div class="current-temp">${Math.round(data.daily.temperature_2m_max[0])}°</div>
+        <div class="current-temp">
+          ${Math.round(data.daily.temperature_2m_max[0])}°
+        </div>
       `;
 
       const scroll = document.createElement('div');
@@ -105,15 +123,31 @@ async function render() {
         const code = data.daily.weathercode[i];
 
         card.innerHTML = `
-          <div class="day-name">${shortDay(day)} ${shortDate(day)}</div>
-          <div class="icon">${weatherIcons[code] || "🌤️"}</div>
+          <div class="day-name">
+            ${shortDay(day)} ${shortDate(day)}
+          </div>
+
+          <div class="icon">
+            ${weatherIcons[code] || "🌤️"}
+          </div>
+
           <div class="temps">
-            ${Math.round(data.daily.temperature_2m_max[i])}° /
+            ${Math.round(data.daily.temperature_2m_max[i])}°
+            /
             ${Math.round(data.daily.temperature_2m_min[i])}°
           </div>
-          <div class="metric">💧 ${data.daily.precipitation_probability_max[i]}%</div>
-          <div class="metric">🌬 ${Math.round(extra.wind)} mph</div>
-          <div class="metric">💦 ${Math.round(extra.humidity)}%</div>
+
+          <div class="metric">
+            💧 ${data.daily.precipitation_probability_max[i]}%
+          </div>
+
+          <div class="metric">
+            🌬 ${Math.round(extra.wind)} mph
+          </div>
+
+          <div class="metric">
+            💦 ${Math.round(extra.humidity)}%
+          </div>
         `;
 
         scroll.appendChild(card);
@@ -121,6 +155,7 @@ async function render() {
 
       row.appendChild(cityCol);
       row.appendChild(scroll);
+
       container.appendChild(row);
 
     } catch (err) {
@@ -128,11 +163,18 @@ async function render() {
     }
   }
 
+  document.querySelectorAll('.delete-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      deleteCity(btn.dataset.city);
+    });
+  });
+
   syncScrolling();
 }
 
 function syncScrolling() {
   const scrollers = document.querySelectorAll('.scroll-area');
+
   let syncing = false;
 
   scrollers.forEach(scroller => {
@@ -147,12 +189,14 @@ function syncScrolling() {
         }
       });
 
-      requestAnimationFrame(() => syncing = false);
+      requestAnimationFrame(() => {
+        syncing = false;
+      });
     });
   });
 }
 
-addBtn.addEventListener('click', async () => {
+addBtn.addEventListener('click', () => {
   const city = cityInput.value.trim();
 
   if (!city) return;
@@ -163,8 +207,11 @@ addBtn.addEventListener('click', async () => {
   }
 
   cities.push(city);
-  localStorage.setItem('weatherCities', JSON.stringify(cities));
+
+  saveCities();
+
   cityInput.value = "";
+
   render();
 });
 

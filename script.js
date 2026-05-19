@@ -1,14 +1,17 @@
 const container = document.getElementById('forecastContainer');
-const addBtn = document.getElementById('addBtn');
 const cityInput = document.getElementById('cityInput');
 
 const resetBtn = document.createElement('button');
 resetBtn.textContent = 'Reset';
+
 document.querySelector('.controls').appendChild(resetBtn);
 
 const suggestionBox = document.createElement('div');
 suggestionBox.className = 'suggestions';
+
 document.querySelector('.controls').appendChild(suggestionBox);
+
+const MAX_CITIES = 7;
 
 const stateMap = {
   Alabama:"AL", Alaska:"AK", Arizona:"AZ", Arkansas:"AR",
@@ -35,8 +38,6 @@ let cities = JSON.parse(
   localStorage.getItem('weatherCities') || '[]'
 );
 
-let selectedCity = null;
-
 const weatherIcons = {
   0:"☀️",1:"🌤️",2:"⛅",3:"☁️",
   45:"🌫️",48:"🌫️",51:"🌦️",
@@ -45,14 +46,18 @@ const weatherIcons = {
 };
 
 function saveCities() {
+
   localStorage.setItem(
     'weatherCities',
     JSON.stringify(cities)
   );
+
 }
 
 function getStateAbbr(state) {
+
   return stateMap[state] || state || '';
+
 }
 
 async function searchCities(query) {
@@ -63,6 +68,7 @@ async function searchCities(query) {
     `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=8`;
 
   const res = await fetch(url);
+
   const data = await res.json();
 
   return data.results || [];
@@ -71,7 +77,7 @@ async function searchCities(query) {
 async function forecast(lat, lon, timezone) {
 
   const url =
-    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&hourly=relative_humidity_2m,temperature_2m,windspeed_10m&temperature_unit=fahrenheit&windspeed_unit=mph&timezone=${timezone}&forecast_days=10`;
+    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&hourly=relative_humidity_2m,temperature_2m,windspeed_10m&temperature_unit=fahrenheit&windspeed_unit=mph&timezone=${timezone}&forecast_days=11`;
 
   const res = await fetch(url);
 
@@ -98,9 +104,11 @@ function getPeakHumidity(dayIndex, hourly) {
       wind = hourly.windspeed_10m[i];
 
     }
+
   }
 
   return { humidity, wind };
+
 }
 
 function shortDay(dateStr) {
@@ -133,11 +141,22 @@ function deleteCity(lat, lon) {
   saveCities();
 
   render();
+
 }
 
 async function render() {
 
   container.innerHTML = '';
+
+  const scrollMaster =
+    document.createElement('div');
+
+  scrollMaster.className = 'master-scroll';
+
+  const rowsWrapper =
+    document.createElement('div');
+
+  rowsWrapper.className = 'rows-wrapper';
 
   for (const city of cities) {
 
@@ -149,10 +168,14 @@ async function render() {
         city.timezone
       );
 
-      const row = document.createElement('div');
+      const row =
+        document.createElement('div');
+
       row.className = 'forecast-row';
 
-      const cityCol = document.createElement('div');
+      const cityCol =
+        document.createElement('div');
+
       cityCol.className = 'city-column';
 
       cityCol.innerHTML = `
@@ -169,17 +192,16 @@ async function render() {
         </div>
 
         <div class="current-temp">
-          ${Math.round(data.daily.temperature_2m_max[0])}°
+          ${Math.round(data.daily.temperature_2m_max[1])}°
         </div>
       `;
 
-      const scroll = document.createElement('div');
-      scroll.className = 'shared-scroll';
+      const daysRow =
+        document.createElement('div');
 
-      const daysRow = document.createElement('div');
       daysRow.className = 'days-row';
 
-      data.daily.time.forEach((day, i) => {
+      for (let i = 1; i < 11; i++) {
 
         const extra =
           getPeakHumidity(i, data.hourly);
@@ -192,13 +214,14 @@ async function render() {
 
         card.className = 'day-card';
 
-        if (i === 0) {
+        if (i === 1) {
           card.classList.add('today-card');
         }
 
         card.innerHTML = `
           <div class="day-name">
-            ${shortDay(day)} ${shortDate(day)}
+            ${shortDay(data.daily.time[i])}
+            ${shortDate(data.daily.time[i])}
           </div>
 
           <div class="icon">
@@ -226,23 +249,24 @@ async function render() {
 
         daysRow.appendChild(card);
 
-      });
-
-      scroll.appendChild(daysRow);
+      }
 
       row.appendChild(cityCol);
-      row.appendChild(scroll);
+      row.appendChild(daysRow);
 
-      container.appendChild(row);
+      rowsWrapper.appendChild(row);
 
     } catch (err) {
 
       console.error(err);
 
     }
+
   }
 
-  syncScrollers();
+  scrollMaster.appendChild(rowsWrapper);
+
+  container.appendChild(scrollMaster);
 
   document.querySelectorAll('.delete-btn').forEach(btn => {
 
@@ -259,49 +283,24 @@ async function render() {
 
 }
 
-function syncScrollers() {
-
-  const scrollers =
-    document.querySelectorAll('.shared-scroll');
-
-  scrollers.forEach(scroller => {
-
-    scroller.addEventListener('scroll', () => {
-
-      const left = scroller.scrollLeft;
-
-      scrollers.forEach(other => {
-
-        if (other !== scroller) {
-          other.scrollLeft = left;
-        }
-
-      });
-
-    }, { passive: true });
-
-  });
-
-}
-
 cityInput.addEventListener('input', async () => {
 
   const query = cityInput.value.trim();
-
-  selectedCity = null;
 
   suggestionBox.innerHTML = '';
 
   if (query.length < 2) return;
 
-  const results = await searchCities(query);
+  const results =
+    await searchCities(query);
 
   results.forEach(result => {
 
     const div =
       document.createElement('div');
 
-    div.className = 'suggestion-item';
+    div.className =
+      'suggestion-item';
 
     const state =
       getStateAbbr(result.admin1);
@@ -315,15 +314,15 @@ cityInput.addEventListener('input', async () => {
 
     div.addEventListener('click', () => {
 
-      selectedCity = {
+      addCity({
         name: result.name,
         state: state,
         lat: result.latitude,
         lon: result.longitude,
         timezone: result.timezone
-      };
+      });
 
-      cityInput.value = label;
+      cityInput.value = '';
 
       suggestionBox.innerHTML = '';
 
@@ -335,20 +334,14 @@ cityInput.addEventListener('input', async () => {
 
 });
 
-addBtn.addEventListener('click', () => {
+function addCity(city) {
 
-  if (!selectedCity) {
-
-    alert('Select city from dropdown');
-
-    return;
-  }
-
-  const exists = cities.some(
-    c =>
-      c.lat === selectedCity.lat &&
-      c.lon === selectedCity.lon
-  );
+  const exists =
+    cities.some(
+      c =>
+        c.lat === city.lat &&
+        c.lon === city.lon
+    );
 
   if (exists) {
 
@@ -357,26 +350,20 @@ addBtn.addEventListener('click', () => {
     return;
   }
 
-  if (cities.length >= 5) {
+  if (cities.length >= MAX_CITIES) {
 
-    alert('Maximum of 5 cities');
+    alert(`Maximum of ${MAX_CITIES} cities`);
 
     return;
   }
 
-  cities.unshift(selectedCity);
+  cities.unshift(city);
 
   saveCities();
 
-  cityInput.value = '';
-
-  suggestionBox.innerHTML = '';
-
-  selectedCity = null;
-
   render();
 
-});
+}
 
 resetBtn.addEventListener('click', () => {
 

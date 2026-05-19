@@ -4,11 +4,12 @@ const cityInput = document.getElementById('cityInput');
 
 const suggestionBox = document.createElement('div');
 suggestionBox.className = 'suggestions';
+
 document.querySelector('.controls').appendChild(suggestionBox);
 
 let cities = JSON.parse(
   localStorage.getItem('weatherCities') ||
-  '["Phoenix","Denver","Rapid City"]'
+  '["Phoenix, AZ","Denver, CO","Rapid City, SD"]'
 );
 
 const weatherIcons = {
@@ -53,7 +54,7 @@ async function searchCities(query) {
   if (query.length < 2) return [];
 
   const url =
-    `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5`;
+    `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=7`;
 
   const res = await fetch(url);
   const data = await res.json();
@@ -61,11 +62,12 @@ async function searchCities(query) {
   return data.results || [];
 }
 
-async function forecast(lat, lon) {
+async function forecast(lat, lon, timezone) {
   const url =
-    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&hourly=relative_humidity_2m,temperature_2m,windspeed_10m&temperature_unit=fahrenheit&windspeed_unit=mph&timezone=auto&forecast_days=10`;
+    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&hourly=relative_humidity_2m,temperature_2m,windspeed_10m&temperature_unit=fahrenheit&windspeed_unit=mph&timezone=${timezone}&forecast_days=10`;
 
   const res = await fetch(url);
+
   return await res.json();
 }
 
@@ -117,12 +119,18 @@ async function render() {
   container.innerHTML = "";
 
   for (const city of cities) {
+
     try {
+
       const geo = await geocode(city);
 
       if (!geo) continue;
 
-      const data = await forecast(geo.latitude, geo.longitude);
+      const data = await forecast(
+        geo.latitude,
+        geo.longitude,
+        geo.timezone
+      );
 
       const row = document.createElement('div');
       row.className = 'forecast-row';
@@ -130,13 +138,19 @@ async function render() {
       const cityCol = document.createElement('div');
       cityCol.className = 'city-column';
 
+      const state =
+        geo.admin1 || "";
+
+      const displayName =
+        `${geo.name}, ${state}`;
+
       cityCol.innerHTML = `
         <button class="delete-btn" data-city="${city}">
           ✕
         </button>
 
         <div class="city-name">
-          ${geo.name}
+          ${displayName}
         </div>
 
         <div class="current-temp">
@@ -148,12 +162,21 @@ async function render() {
       scroll.className = 'scroll-area';
 
       data.daily.time.forEach((day, i) => {
-        const extra = getPeakHumidity(i, data.hourly);
 
-        const card = document.createElement('div');
+        const extra =
+          getPeakHumidity(i, data.hourly);
+
+        const card =
+          document.createElement('div');
+
         card.className = 'day-card';
 
-        const code = data.daily.weathercode[i];
+        if (i === 0) {
+          card.classList.add('today-card');
+        }
+
+        const code =
+          data.daily.weathercode[i];
 
         card.innerHTML = `
           <div class="day-name">
@@ -170,16 +193,16 @@ async function render() {
             ${Math.round(data.daily.temperature_2m_min[i])}°
           </div>
 
-          <div class="metric">
+          <div class="metric rain">
             💧 ${data.daily.precipitation_probability_max[i]}%
           </div>
 
-          <div class="metric">
+          <div class="metric wind">
             🌬 ${Math.round(extra.wind)} mph
           </div>
 
-          <div class="metric">
-            💦 ${Math.round(extra.humidity)}%
+          <div class="metric humidity">
+            🌫 ${Math.round(extra.humidity)}%
           </div>
         `;
 
@@ -206,65 +229,95 @@ async function render() {
 }
 
 function syncScrolling() {
-  const scrollers = document.querySelectorAll('.scroll-area');
+
+  const scrollers =
+    document.querySelectorAll('.scroll-area');
 
   let syncing = false;
 
   scrollers.forEach(scroller => {
+
     scroller.addEventListener('scroll', () => {
+
       if (syncing) return;
 
       syncing = true;
 
       scrollers.forEach(other => {
+
         if (other !== scroller) {
-          other.scrollLeft = scroller.scrollLeft;
+          other.scrollLeft =
+            scroller.scrollLeft;
         }
+
       });
 
       requestAnimationFrame(() => {
         syncing = false;
       });
+
     });
+
   });
+
 }
 
 cityInput.addEventListener('input', async () => {
-  const query = cityInput.value.trim();
+
+  const query =
+    cityInput.value.trim();
 
   suggestionBox.innerHTML = '';
 
   if (query.length < 2) return;
 
-  const results = await searchCities(query);
+  const results =
+    await searchCities(query);
 
   results.forEach(result => {
-    const div = document.createElement('div');
 
-    div.className = 'suggestion-item';
+    const div =
+      document.createElement('div');
 
-    div.textContent =
-      `${result.name}, ${result.admin1 || ''}`;
+    div.className =
+      'suggestion-item';
+
+    const state =
+      result.admin1 || "";
+
+    const label =
+      `${result.name}, ${state}`;
+
+    div.textContent = label;
 
     div.addEventListener('click', () => {
-      cityInput.value = result.name;
+
+      cityInput.value = label;
+
       suggestionBox.innerHTML = '';
+
     });
 
     suggestionBox.appendChild(div);
+
   });
+
 });
 
 addBtn.addEventListener('click', async () => {
-  const city = cityInput.value.trim();
+
+  const city =
+    cityInput.value.trim();
 
   if (!city) return;
 
-  const normalized = normalizeCity(city);
+  const normalized =
+    normalizeCity(city);
 
-  const alreadyExists = cities.some(
-    c => normalizeCity(c) === normalized
-  );
+  const alreadyExists =
+    cities.some(
+      c => normalizeCity(c) === normalized
+    );
 
   if (alreadyExists) {
     alert('City already added');
@@ -276,14 +329,21 @@ addBtn.addEventListener('click', async () => {
     return;
   }
 
-  const geo = await geocode(city);
+  const geo =
+    await geocode(city);
 
   if (!geo) {
     alert('City not found');
     return;
   }
 
-  cities.push(geo.name);
+  const state =
+    geo.admin1 || "";
+
+  const finalName =
+    `${geo.name}, ${state}`;
+
+  cities.unshift(finalName);
 
   saveCities();
 
@@ -292,6 +352,7 @@ addBtn.addEventListener('click', async () => {
   suggestionBox.innerHTML = '';
 
   render();
+
 });
 
 render();

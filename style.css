@@ -20,7 +20,7 @@ body {
 header {
   position: sticky;
   top: 0;
-  z-index: 20;
+  z-index: 50;
   background: #0f172a;
   padding-bottom: 10px;
 }
@@ -42,8 +42,8 @@ input {
   border-radius: 10px;
   border: none;
   font-size: 16px;
-  background: #ffffff;
-  color: #000000;
+  background: white;
+  color: black;
 }
 
 button {
@@ -66,6 +66,10 @@ button:active {
   margin-top: 8px;
 }
 
+.forecast-container {
+  margin-top: 12px;
+}
+
 .forecast-row {
   display: flex;
   margin-bottom: 12px;
@@ -75,13 +79,13 @@ button:active {
 }
 
 .city-column {
-  width: 92px;
-  min-width: 92px;
+  width: 95px;
+  min-width: 95px;
   background: rgba(255,255,255,0.06);
   padding: 10px 6px;
   position: sticky;
   left: 0;
-  z-index: 5;
+  z-index: 10;
   border-right: 1px solid rgba(255,255,255,0.08);
 }
 
@@ -97,15 +101,21 @@ button:active {
   font-weight: bold;
 }
 
-.scroll-area {
+.shared-scroll {
   overflow-x: auto;
-  display: flex;
-  scroll-behavior: smooth;
+  overflow-y: hidden;
+  width: 100%;
   -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
 }
 
-.scroll-area::-webkit-scrollbar {
+.shared-scroll::-webkit-scrollbar {
   display: none;
+}
+
+.days-row {
+  display: flex;
+  min-width: max-content;
 }
 
 .day-card {
@@ -150,7 +160,7 @@ button:active {
 }
 
 .humidity {
-  color: #22c55e !important;
+  color: #22c55e;
   font-weight: 700;
 }
 
@@ -175,7 +185,7 @@ button:active {
   position: absolute;
   top: 48px;
   left: 0;
-  right: 70px;
+  right: 140px;
   background: #1e293b;
   border-radius: 10px;
   overflow: hidden;

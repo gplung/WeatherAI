@@ -1,0 +1,28 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Multi-City Weather Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>10-Day Weather Dashboard</h1>
+      <div class="controls">
+        <input id="cityInput" type="text" placeholder="Add city or ZIP code">
+        <button id="addBtn">Add</button>
+      </div>
+      <p class="hint">Add up to 5 cities. Swipe left/right across forecasts.</p>
+    </header>
+
+    <div class="timeline-header" id="timelineHeader"></div>
+
+    <div id="forecastContainer"></div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

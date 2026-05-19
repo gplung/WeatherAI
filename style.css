@@ -1,0 +1,138 @@
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #0f172a;
+  color: white;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.app {
+  padding: 12px;
+}
+
+header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: #0f172a;
+  padding-bottom: 10px;
+}
+
+h1 {
+  font-size: 1.4rem;
+  margin: 0 0 10px 0;
+}
+
+.controls {
+  display: flex;
+  gap: 8px;
+}
+
+input {
+  flex: 1;
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  font-size: 16px;
+}
+
+button {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 10px;
+  background: #3b82f6;
+  color: white;
+  font-weight: 600;
+}
+
+.hint {
+  opacity: 0.7;
+  font-size: 0.85rem;
+}
+
+.forecast-row {
+  display: flex;
+  margin-bottom: 12px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.city-column {
+  width: 72px;
+  min-width: 72px;
+  background: rgba(255,255,255,0.06);
+  padding: 10px 6px;
+  position: sticky;
+  left: 0;
+  z-index: 5;
+  border-right: 1px solid rgba(255,255,255,0.08);
+}
+
+.city-name {
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.current-temp {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.scroll-area {
+  overflow-x: auto;
+  display: flex;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+.scroll-area::-webkit-scrollbar {
+  display: none;
+}
+
+.day-card {
+  width: 95px;
+  min-width: 95px;
+  padding: 10px 8px;
+  border-right: 1px solid rgba(255,255,255,0.08);
+}
+
+.day-name {
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+
+.icon {
+  font-size: 1.5rem;
+  margin: 6px 0;
+}
+
+.temps {
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+
+.metric {
+  font-size: 0.75rem;
+  opacity: 0.9;
+  line-height: 1.5;
+}
+
+.timeline-header {
+  display: flex;
+  margin-bottom: 8px;
+  padding-left: 72px;
+  overflow-x: auto;
+}
+
+@media (orientation: landscape) {
+  .day-card {
+    width: 115px;
+    min-width: 115px;
+  }
+}

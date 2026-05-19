@@ -4,66 +4,31 @@ const cityInput = document.getElementById('cityInput');
 
 const resetBtn = document.createElement('button');
 resetBtn.textContent = 'Reset';
-resetBtn.id = 'resetBtn';
-
 document.querySelector('.controls').appendChild(resetBtn);
 
 const suggestionBox = document.createElement('div');
 suggestionBox.className = 'suggestions';
-
 document.querySelector('.controls').appendChild(suggestionBox);
 
 const stateMap = {
-  Alabama: "AL",
-  Alaska: "AK",
-  Arizona: "AZ",
-  Arkansas: "AR",
-  California: "CA",
-  Colorado: "CO",
-  Connecticut: "CT",
-  Delaware: "DE",
-  Florida: "FL",
-  Georgia: "GA",
-  Hawaii: "HI",
-  Idaho: "ID",
-  Illinois: "IL",
-  Indiana: "IN",
-  Iowa: "IA",
-  Kansas: "KS",
-  Kentucky: "KY",
-  Louisiana: "LA",
-  Maine: "ME",
-  Maryland: "MD",
-  Massachusetts: "MA",
-  Michigan: "MI",
-  Minnesota: "MN",
-  Mississippi: "MS",
-  Missouri: "MO",
-  Montana: "MT",
-  Nebraska: "NE",
-  Nevada: "NV",
-  "New Hampshire": "NH",
-  "New Jersey": "NJ",
-  "New Mexico": "NM",
-  "New York": "NY",
-  "North Carolina": "NC",
-  "North Dakota": "ND",
-  Ohio: "OH",
-  Oklahoma: "OK",
-  Oregon: "OR",
-  Pennsylvania: "PA",
-  "Rhode Island": "RI",
-  "South Carolina": "SC",
-  "South Dakota": "SD",
-  Tennessee: "TN",
-  Texas: "TX",
-  Utah: "UT",
-  Vermont: "VT",
-  Virginia: "VA",
-  Washington: "WA",
-  "West Virginia": "WV",
-  Wisconsin: "WI",
-  Wyoming: "WY"
+  Alabama:"AL", Alaska:"AK", Arizona:"AZ", Arkansas:"AR",
+  California:"CA", Colorado:"CO", Connecticut:"CT",
+  Delaware:"DE", Florida:"FL", Georgia:"GA",
+  Hawaii:"HI", Idaho:"ID", Illinois:"IL",
+  Indiana:"IN", Iowa:"IA", Kansas:"KS",
+  Kentucky:"KY", Louisiana:"LA", Maine:"ME",
+  Maryland:"MD", Massachusetts:"MA", Michigan:"MI",
+  Minnesota:"MN", Mississippi:"MS", Missouri:"MO",
+  Montana:"MT", Nebraska:"NE", Nevada:"NV",
+  "New Hampshire":"NH", "New Jersey":"NJ",
+  "New Mexico":"NM", "New York":"NY",
+  "North Carolina":"NC", "North Dakota":"ND",
+  Ohio:"OH", Oklahoma:"OK", Oregon:"OR",
+  Pennsylvania:"PA", "Rhode Island":"RI",
+  "South Carolina":"SC", "South Dakota":"SD",
+  Tennessee:"TN", Texas:"TX", Utah:"UT",
+  Vermont:"VT", Virginia:"VA", Washington:"WA",
+  "West Virginia":"WV", Wisconsin:"WI", Wyoming:"WY"
 };
 
 let cities = JSON.parse(
@@ -73,19 +38,10 @@ let cities = JSON.parse(
 let selectedCity = null;
 
 const weatherIcons = {
-  0: "☀️",
-  1: "🌤️",
-  2: "⛅",
-  3: "☁️",
-  45: "🌫️",
-  48: "🌫️",
-  51: "🌦️",
-  61: "🌧️",
-  63: "🌧️",
-  65: "🌧️",
-  71: "❄️",
-  80: "🌦️",
-  95: "⛈️"
+  0:"☀️",1:"🌤️",2:"⛅",3:"☁️",
+  45:"🌫️",48:"🌫️",51:"🌦️",
+  61:"🌧️",63:"🌧️",65:"🌧️",
+  71:"❄️",80:"🌦️",95:"⛈️"
 };
 
 function saveCities() {
@@ -107,7 +63,6 @@ async function searchCities(query) {
     `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=8`;
 
   const res = await fetch(url);
-
   const data = await res.json();
 
   return data.results || [];
@@ -182,7 +137,7 @@ function deleteCity(lat, lon) {
 
 async function render() {
 
-  container.innerHTML = "";
+  container.innerHTML = '';
 
   for (const city of cities) {
 
@@ -194,14 +149,10 @@ async function render() {
         city.timezone
       );
 
-      const row =
-        document.createElement('div');
-
+      const row = document.createElement('div');
       row.className = 'forecast-row';
 
-      const cityCol =
-        document.createElement('div');
-
+      const cityCol = document.createElement('div');
       cityCol.className = 'city-column';
 
       cityCol.innerHTML = `
@@ -222,15 +173,19 @@ async function render() {
         </div>
       `;
 
-      const scroll =
-        document.createElement('div');
+      const scroll = document.createElement('div');
+      scroll.className = 'shared-scroll';
 
-      scroll.className = 'scroll-area';
+      const daysRow = document.createElement('div');
+      daysRow.className = 'days-row';
 
       data.daily.time.forEach((day, i) => {
 
         const extra =
           getPeakHumidity(i, data.hourly);
+
+        const code =
+          data.daily.weathercode[i];
 
         const card =
           document.createElement('div');
@@ -240,9 +195,6 @@ async function render() {
         if (i === 0) {
           card.classList.add('today-card');
         }
-
-        const code =
-          data.daily.weathercode[i];
 
         card.innerHTML = `
           <div class="day-name">
@@ -272,9 +224,11 @@ async function render() {
           </div>
         `;
 
-        scroll.appendChild(card);
+        daysRow.appendChild(card);
 
       });
+
+      scroll.appendChild(daysRow);
 
       row.appendChild(cityCol);
       row.appendChild(scroll);
@@ -287,6 +241,8 @@ async function render() {
 
     }
   }
+
+  syncScrollers();
 
   document.querySelectorAll('.delete-btn').forEach(btn => {
 
@@ -301,42 +257,28 @@ async function render() {
 
   });
 
-  syncScrolling();
 }
 
-function syncScrolling() {
+function syncScrollers() {
 
   const scrollers =
-    document.querySelectorAll('.scroll-area');
-
-  let syncing = false;
+    document.querySelectorAll('.shared-scroll');
 
   scrollers.forEach(scroller => {
 
     scroller.addEventListener('scroll', () => {
 
-      if (syncing) return;
-
-      syncing = true;
+      const left = scroller.scrollLeft;
 
       scrollers.forEach(other => {
 
         if (other !== scroller) {
-
-          other.scrollLeft =
-            scroller.scrollLeft;
-
+          other.scrollLeft = left;
         }
 
       });
 
-      requestAnimationFrame(() => {
-
-        syncing = false;
-
-      });
-
-    });
+    }, { passive: true });
 
   });
 
@@ -344,8 +286,7 @@ function syncScrolling() {
 
 cityInput.addEventListener('input', async () => {
 
-  const query =
-    cityInput.value.trim();
+  const query = cityInput.value.trim();
 
   selectedCity = null;
 
@@ -353,16 +294,14 @@ cityInput.addEventListener('input', async () => {
 
   if (query.length < 2) return;
 
-  const results =
-    await searchCities(query);
+  const results = await searchCities(query);
 
   results.forEach(result => {
 
     const div =
       document.createElement('div');
 
-    div.className =
-      'suggestion-item';
+    div.className = 'suggestion-item';
 
     const state =
       getStateAbbr(result.admin1);
@@ -396,23 +335,22 @@ cityInput.addEventListener('input', async () => {
 
 });
 
-addBtn.addEventListener('click', async () => {
+addBtn.addEventListener('click', () => {
 
   if (!selectedCity) {
 
-    alert('Please select a city from the dropdown');
+    alert('Select city from dropdown');
 
     return;
   }
 
-  const alreadyExists =
-    cities.some(
-      c =>
-        c.lat === selectedCity.lat &&
-        c.lon === selectedCity.lon
-    );
+  const exists = cities.some(
+    c =>
+      c.lat === selectedCity.lat &&
+      c.lon === selectedCity.lon
+  );
 
-  if (alreadyExists) {
+  if (exists) {
 
     alert('City already added');
 

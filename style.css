@@ -56,18 +56,19 @@ button {
   cursor: pointer;
 }
 
-button:active {
-  transform: scale(0.97);
+.master-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
 }
 
-.hint {
-  opacity: 0.7;
-  font-size: 0.85rem;
-  margin-top: 8px;
+.master-scroll::-webkit-scrollbar {
+  display: none;
 }
 
-.forecast-container {
-  margin-top: 12px;
+.rows-wrapper {
+  min-width: max-content;
 }
 
 .forecast-row {
@@ -85,7 +86,7 @@ button:active {
   padding: 10px 6px;
   position: sticky;
   left: 0;
-  z-index: 10;
+  z-index: 20;
   border-right: 1px solid rgba(255,255,255,0.08);
 }
 
@@ -101,21 +102,8 @@ button:active {
   font-weight: bold;
 }
 
-.shared-scroll {
-  overflow-x: auto;
-  overflow-y: hidden;
-  width: 100%;
-  -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth;
-}
-
-.shared-scroll::-webkit-scrollbar {
-  display: none;
-}
-
 .days-row {
   display: flex;
-  min-width: max-content;
 }
 
 .day-card {
@@ -148,7 +136,6 @@ button:active {
 .metric {
   font-size: 0.75rem;
   line-height: 1.45;
-  font-weight: 500;
 }
 
 .rain {
@@ -177,10 +164,6 @@ button:active {
   padding: 0;
 }
 
-.delete-btn:hover {
-  background: rgba(255,255,255,0.22);
-}
-
 .suggestions {
   position: absolute;
   top: 48px;
@@ -197,22 +180,8 @@ button:active {
   padding: 10px;
   border-bottom: 1px solid rgba(255,255,255,0.06);
   cursor: pointer;
-  font-size: 0.95rem;
-}
-
-.suggestion-item:last-child {
-  border-bottom: none;
 }
 
 .suggestion-item:hover {
   background: rgba(255,255,255,0.08);
-}
-
-@media (orientation: landscape) {
-
-  .day-card {
-    width: 115px;
-    min-width: 115px;
-  }
-
 }

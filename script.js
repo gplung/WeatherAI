@@ -7,10 +7,64 @@ suggestionBox.className = 'suggestions';
 
 document.querySelector('.controls').appendChild(suggestionBox);
 
+const stateMap = {
+  Alabama: "AL",
+  Alaska: "AK",
+  Arizona: "AZ",
+  Arkansas: "AR",
+  California: "CA",
+  Colorado: "CO",
+  Connecticut: "CT",
+  Delaware: "DE",
+  Florida: "FL",
+  Georgia: "GA",
+  Hawaii: "HI",
+  Idaho: "ID",
+  Illinois: "IL",
+  Indiana: "IN",
+  Iowa: "IA",
+  Kansas: "KS",
+  Kentucky: "KY",
+  Louisiana: "LA",
+  Maine: "ME",
+  Maryland: "MD",
+  Massachusetts: "MA",
+  Michigan: "MI",
+  Minnesota: "MN",
+  Mississippi: "MS",
+  Missouri: "MO",
+  Montana: "MT",
+  Nebraska: "NE",
+  Nevada: "NV",
+  "New Hampshire": "NH",
+  "New Jersey": "NJ",
+  "New Mexico": "NM",
+  "New York": "NY",
+  "North Carolina": "NC",
+  "North Dakota": "ND",
+  Ohio: "OH",
+  Oklahoma: "OK",
+  Oregon: "OR",
+  Pennsylvania: "PA",
+  "Rhode Island": "RI",
+  "South Carolina": "SC",
+  "South Dakota": "SD",
+  Tennessee: "TN",
+  Texas: "TX",
+  Utah: "UT",
+  Vermont: "VT",
+  Virginia: "VA",
+  Washington: "WA",
+  "West Virginia": "WV",
+  Wisconsin: "WI",
+  Wyoming: "WY"
+};
+
 let cities = JSON.parse(
-  localStorage.getItem('weatherCities') ||
-  '["Phoenix, AZ","Denver, CO","Rapid City, SD"]'
+  localStorage.getItem('weatherCities') || '[]'
 );
+
+let selectedCity = null;
 
 const weatherIcons = {
   0: "☀️",
@@ -28,31 +82,15 @@ const weatherIcons = {
   95: "⛈️"
 };
 
-function normalizeCity(city) {
-  return city.trim().toLowerCase();
-}
-
 function saveCities() {
-  localStorage.setItem('weatherCities', JSON.stringify(cities));
+  localStorage.setItem(
+    'weatherCities',
+    JSON.stringify(cities)
+  );
 }
 
-async function geocode(city) {
-
-  const cleanCity =
-    city.split(',')[0].trim();
-
-  const url =
-    `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cleanCity)}&count=1`;
-
-  const res = await fetch(url);
-
-  const data = await res.json();
-
-  if (!data.results || !data.results.length) {
-    return null;
-  }
-
-  return data.results[0];
+function getStateAbbr(state) {
+  return stateMap[state] || state || '';
 }
 
 async function searchCities(query) {
@@ -60,7 +98,7 @@ async function searchCities(query) {
   if (query.length < 2) return [];
 
   const url =
-    `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=7`;
+    `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=8`;
 
   const res = await fetch(url);
 
@@ -125,10 +163,10 @@ function shortDate(dateStr) {
 
 }
 
-function deleteCity(city) {
+function deleteCity(lat, lon) {
 
   cities = cities.filter(
-    c => normalizeCity(c) !== normalizeCity(city)
+    c => !(c.lat === lat && c.lon === lon)
   );
 
   saveCities();
@@ -144,14 +182,10 @@ async function render() {
 
     try {
 
-      const geo = await geocode(city);
-
-      if (!geo) continue;
-
       const data = await forecast(
-        geo.latitude,
-        geo.longitude,
-        geo.timezone
+        city.lat,
+        city.lon,
+        city.timezone
       );
 
       const row =
@@ -164,23 +198,17 @@ async function render() {
 
       cityCol.className = 'city-column';
 
-      const state =
-        geo.country_code === 'US'
-          ? geo.admin1
-          : '';
-
-      const displayName =
-        state
-          ? `${geo.name}, ${state}`
-          : geo.name;
-
       cityCol.innerHTML = `
-        <button class="delete-btn" data-city="${city}">
+        <button
+          class="delete-btn"
+          data-lat="${city.lat}"
+          data-lon="${city.lon}"
+        >
           ✕
         </button>
 
         <div class="city-name">
-          ${displayName}
+          ${city.name}, ${city.state}
         </div>
 
         <div class="current-temp">
@@ -234,7 +262,7 @@ async function render() {
           </div>
 
           <div class="metric humidity">
-            🌫 ${Math.round(extra.humidity)}%
+            H ${Math.round(extra.humidity)}%
           </div>
         `;
 
@@ -258,7 +286,10 @@ async function render() {
 
     btn.addEventListener('click', () => {
 
-      deleteCity(btn.dataset.city);
+      deleteCity(
+        Number(btn.dataset.lat),
+        Number(btn.dataset.lon)
+      );
 
     });
 
@@ -310,6 +341,8 @@ cityInput.addEventListener('input', async () => {
   const query =
     cityInput.value.trim();
 
+  selectedCity = null;
+
   suggestionBox.innerHTML = '';
 
   if (query.length < 2) return;
@@ -325,14 +358,25 @@ cityInput.addEventListener('input', async () => {
     div.className =
       'suggestion-item';
 
+    const state =
+      getStateAbbr(result.admin1);
+
     const label =
-      result.admin1
-        ? `${result.name}, ${result.admin1}`
+      state
+        ? `${result.name}, ${state}`
         : result.name;
 
     div.textContent = label;
 
     div.addEventListener('click', () => {
+
+      selectedCity = {
+        name: result.name,
+        state: state,
+        lat: result.latitude,
+        lon: result.longitude,
+        timezone: result.timezone
+      };
 
       cityInput.value = label;
 
@@ -348,17 +392,18 @@ cityInput.addEventListener('input', async () => {
 
 addBtn.addEventListener('click', async () => {
 
-  const city =
-    cityInput.value.trim();
+  if (!selectedCity) {
 
-  if (!city) return;
+    alert('Please select a city from the dropdown');
 
-  const normalized =
-    normalizeCity(city);
+    return;
+  }
 
   const alreadyExists =
     cities.some(
-      c => normalizeCity(c) === normalized
+      c =>
+        c.lat === selectedCity.lat &&
+        c.lon === selectedCity.lon
     );
 
   if (alreadyExists) {
@@ -375,28 +420,15 @@ addBtn.addEventListener('click', async () => {
     return;
   }
 
-  const geo =
-    await geocode(city);
-
-  if (!geo) {
-
-    alert('City not found');
-
-    return;
-  }
-
-  const finalName =
-    geo.admin1
-      ? `${geo.name}, ${geo.admin1}`
-      : geo.name;
-
-  cities.unshift(finalName);
+  cities.unshift(selectedCity);
 
   saveCities();
 
   cityInput.value = '';
 
   suggestionBox.innerHTML = '';
+
+  selectedCity = null;
 
   render();
 

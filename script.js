@@ -2,6 +2,10 @@ const container = document.getElementById('forecastContainer');
 const addBtn = document.getElementById('addBtn');
 const cityInput = document.getElementById('cityInput');
 
+const suggestionBox = document.createElement('div');
+suggestionBox.className = 'suggestions';
+document.querySelector('.controls').appendChild(suggestionBox);
+
 let cities = JSON.parse(
   localStorage.getItem('weatherCities') ||
   '["Phoenix","Denver","Rapid City"]'
@@ -22,6 +26,10 @@ const weatherIcons = {
   80: "🌦️",
   95: "⛈️"
 };
+
+function normalizeCity(city) {
+  return city.trim().toLowerCase();
+}
 
 function saveCities() {
   localStorage.setItem('weatherCities', JSON.stringify(cities));
@@ -96,7 +104,9 @@ function shortDate(dateStr) {
 }
 
 function deleteCity(city) {
-  cities = cities.filter(c => c !== city);
+  cities = cities.filter(
+    c => normalizeCity(c) !== normalizeCity(city)
+  );
 
   saveCities();
 
@@ -219,12 +229,44 @@ function syncScrolling() {
   });
 }
 
+cityInput.addEventListener('input', async () => {
+  const query = cityInput.value.trim();
+
+  suggestionBox.innerHTML = '';
+
+  if (query.length < 2) return;
+
+  const results = await searchCities(query);
+
+  results.forEach(result => {
+    const div = document.createElement('div');
+
+    div.className = 'suggestion-item';
+
+    div.textContent =
+      `${result.name}, ${result.admin1 || ''}`;
+
+    div.addEventListener('click', () => {
+      cityInput.value = result.name;
+      suggestionBox.innerHTML = '';
+    });
+
+    suggestionBox.appendChild(div);
+  });
+});
+
 addBtn.addEventListener('click', async () => {
   const city = cityInput.value.trim();
 
   if (!city) return;
 
-  if (cities.includes(city)) {
+  const normalized = normalizeCity(city);
+
+  const alreadyExists = cities.some(
+    c => normalizeCity(c) === normalized
+  );
+
+  if (alreadyExists) {
     alert('City already added');
     return;
   }
@@ -241,11 +283,13 @@ addBtn.addEventListener('click', async () => {
     return;
   }
 
-  cities.push(city);
+  cities.push(geo.name);
 
   saveCities();
 
-  cityInput.value = "";
+  cityInput.value = '';
+
+  suggestionBox.innerHTML = '';
 
   render();
 });

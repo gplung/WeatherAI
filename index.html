@@ -1,31 +1,64 @@
-
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Multi-City Weather Dashboard</title>
-  <link rel="stylesheet" href="style.css">
+
+  <meta charset="UTF-8" />
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+
+  <title>Weather Dashboard</title>
+
+  <link rel="stylesheet" href="style.css" />
+
 </head>
+
 <body>
+
   <div class="app">
+
     <header>
+
       <div class="title-bar">
+
         <h1>Weather Dashboard</h1>
-        <button id="resetBtn">Reset</button>
+
+        <button id="resetBtn">
+          Reset
+        </button>
+
       </div>
+
       <div class="controls">
-        <input id="cityInput" type="text" placeholder="Add city or ZIP code">
-        <button id="addBtn">Add</button>
+
+        <input
+          type="text"
+          id="cityInput"
+          placeholder="Add city or ZIP code"
+        />
+
       </div>
-      <p class="hint">Add up to 7 cities. Swipe left/right across forecasts.</p>
+
+      <div class="hint">
+        Add up to 7 cities
+      </div>
+
     </header>
 
-    <div class="timeline-header" id="timelineHeader"></div>
+    <div
+      id="forecastContainer"
+      class="forecast-container"
+    ></div>
 
-    <div id="forecastContainer"></div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+
   <script src="script.js"></script>
+
 </body>
+
 </html>

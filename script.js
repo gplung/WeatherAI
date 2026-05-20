@@ -167,6 +167,15 @@ function deleteCity(lat, lon) {
 
 }
 
+function openRadar(lat, lon) {
+
+  const url =
+    `https://www.windy.com/${lat}/${lon}?radar`;
+
+  window.open(url, '_blank');
+
+}
+
 function addCity(city) {
 
   const exists = cities.some(
@@ -256,6 +265,14 @@ async function render() {
             data.daily.temperature_2m_max[1]
           )}°
         </div>
+
+        <button
+          class="radar-btn"
+          data-lat="${city.lat}"
+          data-lon="${city.lon}"
+        >
+          RADAR
+        </button>
       `;
 
       const daysRow =
@@ -358,6 +375,24 @@ async function render() {
           deleteCity(
             Number(btn.dataset.lat),
             Number(btn.dataset.lon)
+          );
+
+        }
+      );
+
+    });
+
+  document
+    .querySelectorAll('.radar-btn')
+    .forEach(btn => {
+
+      btn.addEventListener(
+        'click',
+        () => {
+
+          openRadar(
+            btn.dataset.lat,
+            btn.dataset.lon
           );
 
         }

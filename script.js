@@ -1,5 +1,6 @@
 const container = document.getElementById('forecastContainer');
 const cityInput = document.getElementById('cityInput');
+const resetBtn = document.getElementById('resetBtn');
 
 const suggestionBox = document.createElement('div');
 suggestionBox.className = 'suggestions';

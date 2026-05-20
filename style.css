@@ -25,9 +25,16 @@ header {
   padding-bottom: 10px;
 }
 
+.title-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
 h1 {
   font-size: 1.35rem;
-  margin: 0 0 10px 0;
+  margin: 0;
 }
 
 .controls {
@@ -50,10 +57,18 @@ button {
   padding: 10px 16px;
   border: none;
   border-radius: 10px;
-  background: #2563eb;
   color: white;
   font-weight: 600;
   cursor: pointer;
+}
+
+#addBtn {
+  background: #2563eb;
+}
+
+#resetBtn {
+  background: #f59e0b;
+  color: #111827;
 }
 
 .master-scroll {
@@ -228,4 +243,10 @@ button {
 .suggestion-item:hover {
   background:
     rgba(255,255,255,0.08);
+}
+
+.hint {
+  opacity: 0.7;
+  font-size: 0.85rem;
+  margin-top: 8px;
 }

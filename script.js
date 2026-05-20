@@ -1,35 +1,50 @@
-const container = document.getElementById('forecastContainer');
-const cityInput = document.getElementById('cityInput');
-const resetBtn = document.querySelector('#resetBtn');
+const container =
+  document.getElementById('forecastContainer');
 
-console.log(resetBtn);
+const cityInput =
+  document.getElementById('cityInput');
 
-const suggestionBox = document.createElement('div');
+const resetBtn =
+  document.getElementById('resetBtn');
+
+const suggestionBox =
+  document.createElement('div');
+
 suggestionBox.className = 'suggestions';
 
-document.querySelector('.controls').appendChild(suggestionBox);
+document
+  .querySelector('.controls')
+  .appendChild(suggestionBox);
 
 const MAX_CITIES = 7;
 
 const stateMap = {
-  Alabama:"AL", Alaska:"AK", Arizona:"AZ", Arkansas:"AR",
-  California:"CA", Colorado:"CO", Connecticut:"CT",
-  Delaware:"DE", Florida:"FL", Georgia:"GA",
-  Hawaii:"HI", Idaho:"ID", Illinois:"IL",
-  Indiana:"IN", Iowa:"IA", Kansas:"KS",
-  Kentucky:"KY", Louisiana:"LA", Maine:"ME",
-  Maryland:"MD", Massachusetts:"MA", Michigan:"MI",
-  Minnesota:"MN", Mississippi:"MS", Missouri:"MO",
-  Montana:"MT", Nebraska:"NE", Nevada:"NV",
-  "New Hampshire":"NH", "New Jersey":"NJ",
-  "New Mexico":"NM", "New York":"NY",
-  "North Carolina":"NC", "North Dakota":"ND",
-  Ohio:"OH", Oklahoma:"OK", Oregon:"OR",
+  Alabama:"AL", Alaska:"AK", Arizona:"AZ",
+  Arkansas:"AR", California:"CA",
+  Colorado:"CO", Connecticut:"CT",
+  Delaware:"DE", Florida:"FL",
+  Georgia:"GA", Hawaii:"HI",
+  Idaho:"ID", Illinois:"IL",
+  Indiana:"IN", Iowa:"IA",
+  Kansas:"KS", Kentucky:"KY",
+  Louisiana:"LA", Maine:"ME",
+  Maryland:"MD", Massachusetts:"MA",
+  Michigan:"MI", Minnesota:"MN",
+  Mississippi:"MS", Missouri:"MO",
+  Montana:"MT", Nebraska:"NE",
+  Nevada:"NV", "New Hampshire":"NH",
+  "New Jersey":"NJ", "New Mexico":"NM",
+  "New York":"NY", "North Carolina":"NC",
+  "North Dakota":"ND", Ohio:"OH",
+  Oklahoma:"OK", Oregon:"OR",
   Pennsylvania:"PA", "Rhode Island":"RI",
-  "South Carolina":"SC", "South Dakota":"SD",
-  Tennessee:"TN", Texas:"TX", Utah:"UT",
-  Vermont:"VT", Virginia:"VA", Washington:"WA",
-  "West Virginia":"WV", Wisconsin:"WI", Wyoming:"WY"
+  "South Carolina":"SC",
+  "South Dakota":"SD",
+  Tennessee:"TN", Texas:"TX",
+  Utah:"UT", Vermont:"VT",
+  Virginia:"VA", Washington:"WA",
+  "West Virginia":"WV",
+  Wisconsin:"WI", Wyoming:"WY"
 };
 
 let cities = JSON.parse(
@@ -70,6 +85,7 @@ async function searchCities(query) {
   const data = await res.json();
 
   return data.results || [];
+
 }
 
 async function forecast(lat, lon, timezone) {
@@ -80,6 +96,7 @@ async function forecast(lat, lon, timezone) {
   const res = await fetch(url);
 
   return await res.json();
+
 }
 
 function getPeakHumidity(dayIndex, hourly) {
@@ -93,13 +110,18 @@ function getPeakHumidity(dayIndex, hourly) {
 
   for (let i = start; i < end; i++) {
 
-    const temp = hourly.temperature_2m[i];
+    const temp =
+      hourly.temperature_2m[i];
 
     if (temp > maxTemp) {
 
       maxTemp = temp;
-      humidity = hourly.relative_humidity_2m[i];
-      wind = hourly.windspeed_10m[i];
+
+      humidity =
+        hourly.relative_humidity_2m[i];
+
+      wind =
+        hourly.windspeed_10m[i];
 
     }
 
@@ -111,30 +133,67 @@ function getPeakHumidity(dayIndex, hourly) {
 
 function shortDay(dateStr) {
 
-  return new Date(dateStr).toLocaleDateString(
-    'en-US',
-    { weekday: 'short' }
-  );
+  return new Date(dateStr)
+    .toLocaleDateString(
+      'en-US',
+      { weekday: 'short' }
+    );
 
 }
 
 function shortDate(dateStr) {
 
-  return new Date(dateStr).toLocaleDateString(
-    'en-US',
-    {
-      month: 'numeric',
-      day: 'numeric'
-    }
-  );
+  return new Date(dateStr)
+    .toLocaleDateString(
+      'en-US',
+      {
+        month: 'numeric',
+        day: 'numeric'
+      }
+    );
 
 }
 
 function deleteCity(lat, lon) {
 
   cities = cities.filter(
-    c => !(c.lat === lat && c.lon === lon)
+    c =>
+      !(c.lat === lat && c.lon === lon)
   );
+
+  saveCities();
+
+  render();
+
+}
+
+function addCity(city) {
+
+  const exists = cities.some(
+    c =>
+      c.lat === city.lat &&
+      c.lon === city.lon
+  );
+
+  if (exists) {
+
+    alert('City already added');
+
+    return;
+
+  }
+
+  if (cities.length >= MAX_CITIES) {
+
+    alert(
+      `Maximum of ${MAX_CITIES} cities`
+    );
+
+    return;
+
+  }
+
+  cities.unshift(city);
 
   saveCities();
 
@@ -146,15 +205,15 @@ async function render() {
 
   container.innerHTML = '';
 
-  const scrollMaster =
+  const scroll =
     document.createElement('div');
 
-  scrollMaster.className = 'master-scroll';
+  scroll.className = 'master-scroll';
 
-  const rowsWrapper =
+  const wrapper =
     document.createElement('div');
 
-  rowsWrapper.className = 'rows-wrapper';
+  wrapper.className = 'rows-wrapper';
 
   for (const city of cities) {
 
@@ -170,6 +229,9 @@ async function render() {
         document.createElement('div');
 
       row.className = 'forecast-row';
+
+      row.dataset.lat = city.lat;
+      row.dataset.lon = city.lon;
 
       const cityCol =
         document.createElement('div');
@@ -190,7 +252,9 @@ async function render() {
         </div>
 
         <div class="current-temp">
-          ${Math.round(data.daily.temperature_2m_max[1])}°
+          ${Math.round(
+            data.daily.temperature_2m_max[1]
+          )}°
         </div>
       `;
 
@@ -202,7 +266,10 @@ async function render() {
       for (let i = 1; i < 11; i++) {
 
         const extra =
-          getPeakHumidity(i, data.hourly);
+          getPeakHumidity(
+            i,
+            data.hourly
+          );
 
         const code =
           data.daily.weathercode[i];
@@ -218,8 +285,13 @@ async function render() {
 
         card.innerHTML = `
           <div class="day-name">
-            ${shortDay(data.daily.time[i])}
-            ${shortDate(data.daily.time[i])}
+            ${shortDay(
+              data.daily.time[i]
+            )}
+
+            ${shortDate(
+              data.daily.time[i]
+            )}
           </div>
 
           <div class="icon">
@@ -227,21 +299,30 @@ async function render() {
           </div>
 
           <div class="temps">
-            ${Math.round(data.daily.temperature_2m_max[i])}°
+            ${Math.round(
+              data.daily.temperature_2m_max[i]
+            )}°
+
             /
-            ${Math.round(data.daily.temperature_2m_min[i])}°
+
+            ${Math.round(
+              data.daily.temperature_2m_min[i]
+            )}°
           </div>
 
           <div class="metric rain">
-            💧 ${data.daily.precipitation_probability_max[i]}%
+            💧
+            ${data.daily.precipitation_probability_max[i]}%
           </div>
 
           <div class="metric wind">
-            🌬 ${Math.round(extra.wind)} mph
+            🌬
+            ${Math.round(extra.wind)} mph
           </div>
 
           <div class="metric humidity">
-            H ${Math.round(extra.humidity)}%
+            H
+            ${Math.round(extra.humidity)}%
           </div>
         `;
 
@@ -252,7 +333,7 @@ async function render() {
       row.appendChild(cityCol);
       row.appendChild(daysRow);
 
-      rowsWrapper.appendChild(row);
+      wrapper.appendChild(row);
 
     } catch (err) {
 
@@ -262,120 +343,131 @@ async function render() {
 
   }
 
-  scrollMaster.appendChild(rowsWrapper);
+  scroll.appendChild(wrapper);
 
-  container.appendChild(scrollMaster);
+  container.appendChild(scroll);
 
-  document.querySelectorAll('.delete-btn').forEach(btn => {
+  document
+    .querySelectorAll('.delete-btn')
+    .forEach(btn => {
 
-    btn.addEventListener('click', () => {
+      btn.addEventListener(
+        'click',
+        () => {
 
-      deleteCity(
-        Number(btn.dataset.lat),
-        Number(btn.dataset.lon)
+          deleteCity(
+            Number(btn.dataset.lat),
+            Number(btn.dataset.lon)
+          );
+
+        }
       );
 
     });
 
+  new Sortable(wrapper, {
+
+    animation: 150,
+
+    handle: '.city-column',
+
+    onEnd: evt => {
+
+      const moved =
+        cities.splice(evt.oldIndex, 1)[0];
+
+      cities.splice(
+        evt.newIndex,
+        0,
+        moved
+      );
+
+      saveCities();
+
+    }
+
   });
 
 }
 
-cityInput.addEventListener('input', async () => {
+cityInput.addEventListener(
+  'input',
+  async () => {
 
-  const query = cityInput.value.trim();
+    const query =
+      cityInput.value.trim();
 
-  suggestionBox.innerHTML = '';
+    suggestionBox.innerHTML = '';
 
-  if (query.length < 2) return;
+    if (query.length < 2) return;
 
-  const results =
-    await searchCities(query);
+    const results =
+      await searchCities(query);
 
-  results.forEach(result => {
+    results.forEach(result => {
 
-    const div =
-      document.createElement('div');
+      const div =
+        document.createElement('div');
 
-    div.className =
-      'suggestion-item';
+      div.className =
+        'suggestion-item';
 
-    const state =
-      getStateAbbr(result.admin1);
+      const state =
+        getStateAbbr(result.admin1);
 
-    const label =
-      state
-        ? `${result.name}, ${state}`
-        : result.name;
+      const label =
+        state
+          ? `${result.name}, ${state}`
+          : result.name;
 
-    div.textContent = label;
+      div.textContent = label;
 
-    div.addEventListener('click', () => {
+      div.addEventListener(
+        'click',
+        () => {
 
-      addCity({
-        name: result.name,
-        state: state,
-        lat: result.latitude,
-        lon: result.longitude,
-        timezone: result.timezone
-      });
+          addCity({
+            name: result.name,
+            state: state,
+            lat: result.latitude,
+            lon: result.longitude,
+            timezone: result.timezone
+          });
 
-      cityInput.value = '';
+          cityInput.value = '';
 
-      suggestionBox.innerHTML = '';
+          suggestionBox.innerHTML = '';
+
+        }
+      );
+
+      suggestionBox.appendChild(div);
 
     });
 
-    suggestionBox.appendChild(div);
+  }
+);
 
-  });
+resetBtn.addEventListener(
+  'click',
+  () => {
 
-});
+    const confirmed =
+      confirm(
+        'Clear all saved cities?'
+      );
 
-function addCity(city) {
+    if (!confirmed) return;
 
-  const exists =
-    cities.some(
-      c =>
-        c.lat === city.lat &&
-        c.lon === city.lon
+    localStorage.removeItem(
+      'weatherCities'
     );
 
-  if (exists) {
+    cities = [];
 
-    alert('City already added');
+    render();
 
-    return;
   }
-
-  if (cities.length >= MAX_CITIES) {
-
-    alert(`Maximum of ${MAX_CITIES} cities`);
-
-    return;
-  }
-
-  cities.unshift(city);
-
-  saveCities();
-
-  render();
-
-}
-
-resetBtn.addEventListener('click', () => {
-
-  const confirmed =
-    confirm('Clear all saved cities?');
-
-  if (!confirmed) return;
-
-  localStorage.removeItem('weatherCities');
-
-  cities = [];
-
-  render();
-
-});
+);
 
 render();

@@ -70,6 +70,8 @@ const weatherIcons = {
   95:"⛈️"
 };
 
+let sortableInstance = null;
+
 function saveCities() {
 
   localStorage.setItem(
@@ -173,7 +175,10 @@ function deleteCity(lat, lon) {
 
   cities = cities.filter(
     c =>
-      !(c.lat === lat && c.lon === lon)
+      !(
+        c.lat === lat &&
+        c.lon === lon
+      )
   );
 
   saveCities();
@@ -267,6 +272,7 @@ async function render() {
           class="delete-btn"
           data-lat="${city.lat}"
           data-lon="${city.lon}"
+          type="button"
         >
           ✕
         </button>
@@ -285,6 +291,7 @@ async function render() {
           class="radar-btn"
           data-lat="${city.lat}"
           data-lon="${city.lon}"
+          type="button"
         >
           RADAR
         </button>
@@ -388,28 +395,20 @@ async function render() {
     .querySelectorAll('.delete-btn')
     .forEach(btn => {
 
-      const removeCity = event => {
-
-        event.preventDefault();
-
-        event.stopPropagation();
-
-        deleteCity(
-          Number(btn.dataset.lat),
-          Number(btn.dataset.lon)
-        );
-
-      };
-
       btn.addEventListener(
-        'click',
-        removeCity
-      );
+        'pointerdown',
+        event => {
 
-      btn.addEventListener(
-        'touchstart',
-        removeCity,
-        { passive: false }
+          event.preventDefault();
+
+          event.stopPropagation();
+
+          deleteCity(
+            Number(btn.dataset.lat),
+            Number(btn.dataset.lon)
+          );
+
+        }
       );
 
     });
@@ -420,7 +419,9 @@ async function render() {
 
       btn.addEventListener(
         'click',
-        () => {
+        event => {
+
+          event.stopPropagation();
 
           openRadar(
             btn.dataset.lat,
@@ -432,28 +433,48 @@ async function render() {
 
     });
 
-  new Sortable(wrapper, {
+  if (sortableInstance) {
 
-    animation: 150,
+    sortableInstance.destroy();
 
-    handle: '.city-column',
+  }
 
-    onEnd: evt => {
+  sortableInstance =
+    new Sortable(wrapper, {
 
-      const moved =
-        cities.splice(evt.oldIndex, 1)[0];
+      animation: 150,
 
-      cities.splice(
-        evt.newIndex,
-        0,
-        moved
-      );
+      handle: '.city-column',
 
-      saveCities();
+      delay: 150,
 
-    }
+      delayOnTouchOnly: true,
 
-  });
+      ghostClass:
+        'sortable-ghost',
+
+      chosenClass:
+        'sortable-chosen',
+
+      onEnd: evt => {
+
+        const moved =
+          cities.splice(
+            evt.oldIndex,
+            1
+          )[0];
+
+        cities.splice(
+          evt.newIndex,
+          0,
+          moved
+        );
+
+        saveCities();
+
+      }
+
+    });
 
 }
 
@@ -466,7 +487,11 @@ cityInput.addEventListener(
 
     suggestionBox.innerHTML = '';
 
-    if (query.length < 2) return;
+    if (query.length < 2) {
+
+      return;
+
+    }
 
     const results =
       await searchCities(query);
@@ -480,7 +505,9 @@ cityInput.addEventListener(
         'suggestion-item';
 
       const state =
-        getStateAbbr(result.admin1);
+        getStateAbbr(
+          result.admin1
+        );
 
       const label =
         state
@@ -494,11 +521,20 @@ cityInput.addEventListener(
         () => {
 
           addCity({
+
             name: result.name,
+
             state: state,
-            lat: result.latitude,
-            lon: result.longitude,
-            timezone: result.timezone
+
+            lat:
+              result.latitude,
+
+            lon:
+              result.longitude,
+
+            timezone:
+              result.timezone
+
           });
 
           cityInput.value = '';
@@ -524,7 +560,11 @@ resetBtn.addEventListener(
         'Clear all saved cities?'
       );
 
-    if (!confirmed) return;
+    if (!confirmed) {
+
+      return;
+
+    }
 
     localStorage.removeItem(
       'weatherCities'
@@ -563,7 +603,8 @@ locationBtn.addEventListener(
 
         const city = {
 
-          name: '📍 My Location',
+          name:
+            '📍 My Location',
 
           state: '',
 

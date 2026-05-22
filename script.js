@@ -272,7 +272,7 @@ async function render() {
         </button>
 
         <div class="city-name">
-          ${city.name}, ${city.state}
+          ${city.name}${city.state ? ', ' + city.state : ''}
         </div>
 
         <div class="current-temp">
@@ -541,7 +541,7 @@ locationBtn.addEventListener(
 
     navigator.geolocation.getCurrentPosition(
 
-      async position => {
+      position => {
 
         const lat =
           position.coords.latitude;
@@ -549,76 +549,24 @@ locationBtn.addEventListener(
         const lon =
           position.coords.longitude;
 
-        try {
+        const city = {
 
-          const url =
-            `https://geocoding-api.open-meteo.com/v1/reverse?latitude=${lat}&longitude=${lon}&language=en&format=json`;
+          name: 'My Location',
 
-          const res =
-            await fetch(url);
+          state: '',
 
-          if (!res.ok) {
+          lat: lat,
 
-            throw new Error(
-              'Reverse geocode failed'
-            );
+          lon: lon,
 
-          }
+          timezone:
+            Intl.DateTimeFormat()
+              .resolvedOptions()
+              .timeZone
 
-          const data =
-            await res.json();
+        };
 
-          console.log(data);
-
-          if (
-            !data.results ||
-            !data.results.length
-          ) {
-
-            alert(
-              'Unable to determine city name'
-            );
-
-            return;
-
-          }
-
-          const result =
-            data.results[0];
-
-          const state =
-            getStateAbbr(
-              result.admin1
-            );
-
-          addCity({
-
-            name:
-              result.name ||
-              'Current Location',
-
-            state: state,
-
-            lat:
-              result.latitude,
-
-            lon:
-              result.longitude,
-
-            timezone:
-              result.timezone
-
-          });
-
-        } catch (err) {
-
-          console.error(err);
-
-          alert(
-            'Unable to get location weather'
-          );
-
-        }
+        addCity(city);
 
       },
 

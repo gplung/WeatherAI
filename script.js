@@ -7,6 +7,9 @@ const cityInput =
 const resetBtn =
   document.getElementById('resetBtn');
 
+const locationBtn =
+  document.getElementById('locationBtn');
+
 const suggestionBox =
   document.createElement('div');
 
@@ -52,10 +55,19 @@ let cities = JSON.parse(
 );
 
 const weatherIcons = {
-  0:"☀️",1:"🌤️",2:"⛅",3:"☁️",
-  45:"🌫️",48:"🌫️",51:"🌦️",
-  61:"🌧️",63:"🌧️",65:"🌧️",
-  71:"❄️",80:"🌦️",95:"⛈️"
+  0:"☀️",
+  1:"🌤️",
+  2:"⛅",
+  3:"☁️",
+  45:"🌫️",
+  48:"🌫️",
+  51:"🌦️",
+  61:"🌧️",
+  63:"🌧️",
+  65:"🌧️",
+  71:"❄️",
+  80:"🌦️",
+  95:"⛈️"
 };
 
 function saveCities() {
@@ -127,7 +139,10 @@ function getPeakHumidity(dayIndex, hourly) {
 
   }
 
-  return { humidity, wind };
+  return {
+    humidity,
+    wind
+  };
 
 }
 
@@ -297,7 +312,11 @@ async function render() {
         card.className = 'day-card';
 
         if (i === 1) {
-          card.classList.add('today-card');
+
+          card.classList.add(
+            'today-card'
+          );
+
         }
 
         card.innerHTML = `
@@ -348,6 +367,7 @@ async function render() {
       }
 
       row.appendChild(cityCol);
+
       row.appendChild(daysRow);
 
       wrapper.appendChild(row);
@@ -501,6 +521,99 @@ resetBtn.addEventListener(
     cities = [];
 
     render();
+
+  }
+);
+
+locationBtn.addEventListener(
+  'click',
+  () => {
+
+    if (!navigator.geolocation) {
+
+      alert(
+        'Geolocation not supported'
+      );
+
+      return;
+
+    }
+
+    navigator.geolocation.getCurrentPosition(
+
+      async position => {
+
+        const lat =
+          position.coords.latitude;
+
+        const lon =
+          position.coords.longitude;
+
+        try {
+
+          const url =
+            `https://geocoding-api.open-meteo.com/v1/reverse?latitude=${lat}&longitude=${lon}`;
+
+          const res =
+            await fetch(url);
+
+          const data =
+            await res.json();
+
+          if (!data.results?.length) {
+
+            alert(
+              'Location not found'
+            );
+
+            return;
+
+          }
+
+          const result =
+            data.results[0];
+
+          const state =
+            getStateAbbr(
+              result.admin1
+            );
+
+          addCity({
+
+            name: result.name,
+
+            state: state,
+
+            lat: result.latitude,
+
+            lon: result.longitude,
+
+            timezone:
+              result.timezone
+
+          });
+
+        } catch (err) {
+
+          console.error(err);
+
+          alert(
+            'Unable to get location weather'
+          );
+
+        }
+
+      },
+
+      () => {
+
+        alert(
+          'Location permission denied'
+        );
+
+      }
+
+    );
 
   }
 );

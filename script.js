@@ -103,7 +103,7 @@ async function searchCities(query) {
 async function forecast(lat, lon, timezone) {
 
   const url =
-    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&hourly=relative_humidity_2m,temperature_2m,windspeed_10m&temperature_unit=fahrenheit&windspeed_unit=mph&timezone=${timezone}&forecast_days=11`;
+    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&hourly=relative_humidity_2m,temperature_2m,windspeed_10m&temperature_unit=fahrenheit&windspeed_unit=mph&timezone=${timezone}&forecast_days=11`;
 
   const res = await fetch(url);
 
@@ -277,7 +277,7 @@ async function render() {
 
         <div class="current-temp">
           ${Math.round(
-            data.daily.temperature_2m_max[1]
+            data.current_weather.temperature
           )}°
         </div>
 
@@ -551,7 +551,7 @@ locationBtn.addEventListener(
 
         const city = {
 
-          name: 'My Location',
+          name: '📍 My Location',
 
           state: '',
 

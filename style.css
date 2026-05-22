@@ -32,6 +32,11 @@ header {
   margin-bottom: 10px;
 }
 
+.top-buttons {
+  display: flex;
+  gap: 8px;
+}
+
 h1 {
   font-size: 1.35rem;
   margin: 0;
@@ -62,6 +67,12 @@ button {
 #resetBtn {
   background: #f59e0b;
   color: #111827;
+}
+
+#locationBtn {
+  background: #2563eb;
+  color: white;
+  padding: 10px 14px;
 }
 
 .hint {

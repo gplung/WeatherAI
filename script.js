@@ -552,18 +552,31 @@ locationBtn.addEventListener(
         try {
 
           const url =
-            `https://geocoding-api.open-meteo.com/v1/reverse?latitude=${lat}&longitude=${lon}`;
+            `https://geocoding-api.open-meteo.com/v1/reverse?latitude=${lat}&longitude=${lon}&language=en&format=json`;
 
           const res =
             await fetch(url);
 
+          if (!res.ok) {
+
+            throw new Error(
+              'Reverse geocode failed'
+            );
+
+          }
+
           const data =
             await res.json();
 
-          if (!data.results?.length) {
+          console.log(data);
+
+          if (
+            !data.results ||
+            !data.results.length
+          ) {
 
             alert(
-              'Location not found'
+              'Unable to determine city name'
             );
 
             return;
@@ -580,13 +593,17 @@ locationBtn.addEventListener(
 
           addCity({
 
-            name: result.name,
+            name:
+              result.name ||
+              'Current Location',
 
             state: state,
 
-            lat: result.latitude,
+            lat:
+              result.latitude,
 
-            lon: result.longitude,
+            lon:
+              result.longitude,
 
             timezone:
               result.timezone
@@ -605,12 +622,20 @@ locationBtn.addEventListener(
 
       },
 
-      () => {
+      error => {
+
+        console.error(error);
 
         alert(
           'Location permission denied'
         );
 
+      },
+
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
       }
 
     );

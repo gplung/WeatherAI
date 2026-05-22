@@ -388,16 +388,28 @@ async function render() {
     .querySelectorAll('.delete-btn')
     .forEach(btn => {
 
+      const removeCity = event => {
+
+        event.preventDefault();
+
+        event.stopPropagation();
+
+        deleteCity(
+          Number(btn.dataset.lat),
+          Number(btn.dataset.lon)
+        );
+
+      };
+
       btn.addEventListener(
         'click',
-        () => {
+        removeCity
+      );
 
-          deleteCity(
-            Number(btn.dataset.lat),
-            Number(btn.dataset.lon)
-          );
-
-        }
+      btn.addEventListener(
+        'touchstart',
+        removeCity,
+        { passive: false }
       );
 
     });

@@ -122,6 +122,35 @@ function addCity(city) {
 
 }
 
+function formatDay(dateString) {
+
+  const date =
+    new Date(dateString);
+
+  return date.toLocaleDateString(
+    'en-US',
+    {
+      weekday: 'short'
+    }
+  );
+
+}
+
+function formatDate(dateString) {
+
+  const date =
+    new Date(dateString);
+
+  return date.toLocaleDateString(
+    'en-US',
+    {
+      month: 'numeric',
+      day: 'numeric'
+    }
+  );
+
+}
+
 async function render() {
 
   container.innerHTML = '';
@@ -129,12 +158,14 @@ async function render() {
   const scroll =
     document.createElement('div');
 
-  scroll.className = 'master-scroll';
+  scroll.className =
+    'master-scroll';
 
   const wrapper =
     document.createElement('div');
 
-  wrapper.className = 'rows-wrapper';
+  wrapper.className =
+    'rows-wrapper';
 
   for (const city of cities) {
 
@@ -146,12 +177,14 @@ async function render() {
       const row =
         document.createElement('div');
 
-      row.className = 'forecast-row';
+      row.className =
+        'forecast-row';
 
       const cityCol =
         document.createElement('div');
 
-      cityCol.className = 'city-column';
+      cityCol.className =
+        'city-column';
 
       cityCol.innerHTML = `
         <button
@@ -185,9 +218,47 @@ async function render() {
       const daysRow =
         document.createElement('div');
 
-      daysRow.className = 'days-row';
+      daysRow.className =
+        'days-row';
 
-      data.forecast.forecastday.forEach(
+      /*
+        IMPORTANT FIX:
+        WeatherAPI returns TODAY
+        as forecastday[0]
+
+        Your previous version
+        accidentally included
+        yesterday because of
+        timezone/render timing.
+
+        This logic guarantees
+        TODAY is always first.
+      */
+
+      const today =
+        new Date();
+
+      today.setHours(
+        0,0,0,0
+      );
+
+      const validDays =
+        data.forecast.forecastday.filter(
+          day => {
+
+            const d =
+              new Date(day.date);
+
+            d.setHours(
+              0,0,0,0
+            );
+
+            return d >= today;
+
+          }
+        );
+
+      validDays.forEach(
         (day, index) => {
 
           const card =
@@ -204,28 +275,10 @@ async function render() {
 
           }
 
-          const date =
-            new Date(day.date);
-
-          const dayName =
-            date.toLocaleDateString(
-              'en-US',
-              { weekday: 'short' }
-            );
-
-          const shortDate =
-            date.toLocaleDateString(
-              'en-US',
-              {
-                month: 'numeric',
-                day: 'numeric'
-              }
-            );
-
           card.innerHTML = `
             <div class="day-name">
-              ${dayName}
-              ${shortDate}
+              ${formatDay(day.date)}
+              ${formatDate(day.date)}
             </div>
 
             <div class="icon">
@@ -375,7 +428,8 @@ cityInput.addEventListener(
     const query =
       cityInput.value.trim();
 
-    suggestionBox.innerHTML = '';
+    suggestionBox.innerHTML =
+      '';
 
     if (query.length < 2) {
 
@@ -403,7 +457,8 @@ cityInput.addEventListener(
 
           addCity({
 
-            id: crypto.randomUUID(),
+            id:
+              crypto.randomUUID(),
 
             name:
               `${result.name}, ${result.region}`,
@@ -411,15 +466,19 @@ cityInput.addEventListener(
             query:
               `${result.lat},${result.lon}`,
 
-            lat: result.lat,
+            lat:
+              result.lat,
 
-            lon: result.lon
+            lon:
+              result.lon
 
           });
 
-          cityInput.value = '';
+          cityInput.value =
+            '';
 
-          suggestionBox.innerHTML = '';
+          suggestionBox.innerHTML =
+            '';
 
         }
       );
@@ -483,7 +542,8 @@ locationBtn.addEventListener(
 
         addCity({
 
-          id: crypto.randomUUID(),
+          id:
+            crypto.randomUUID(),
 
           name:
             '📍 My Location',
@@ -491,9 +551,11 @@ locationBtn.addEventListener(
           query:
             `${lat},${lon}`,
 
-          lat: lat,
+          lat:
+            lat,
 
-          lon: lon
+          lon:
+            lon
 
         });
 

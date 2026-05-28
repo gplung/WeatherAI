@@ -81,10 +81,10 @@ function deleteCity(id) {
 
 function openRadar(lat, lon) {
 
-  const url =
-    `https://www.windy.com/${lat}/${lon}?radar`;
-
-  window.open(url, '_blank');
+  window.open(
+    `https://www.windy.com/${lat}/${lon}?radar`,
+    '_blank'
+  );
 
 }
 
@@ -122,10 +122,35 @@ function addCity(city) {
 
 }
 
-function formatDay(dateString) {
+/*
+  CRITICAL FIX:
+  Parse date WITHOUT timezone conversion
+*/
+
+function parseLocalDate(dateString) {
+
+  const parts =
+    dateString.split('-');
+
+  return {
+    year: Number(parts[0]),
+    month: Number(parts[1]),
+    day: Number(parts[2])
+  };
+
+}
+
+function getDayName(dateString) {
+
+  const p =
+    parseLocalDate(dateString);
 
   const date =
-    new Date(dateString);
+    new Date(
+      p.year,
+      p.month - 1,
+      p.day
+    );
 
   return date.toLocaleDateString(
     'en-US',
@@ -136,18 +161,12 @@ function formatDay(dateString) {
 
 }
 
-function formatDate(dateString) {
+function getShortDate(dateString) {
 
-  const date =
-    new Date(dateString);
+  const p =
+    parseLocalDate(dateString);
 
-  return date.toLocaleDateString(
-    'en-US',
-    {
-      month: 'numeric',
-      day: 'numeric'
-    }
-  );
+  return `${p.month}/${p.day}`;
 
 }
 
@@ -221,44 +240,7 @@ async function render() {
       daysRow.className =
         'days-row';
 
-      /*
-        IMPORTANT FIX:
-        WeatherAPI returns TODAY
-        as forecastday[0]
-
-        Your previous version
-        accidentally included
-        yesterday because of
-        timezone/render timing.
-
-        This logic guarantees
-        TODAY is always first.
-      */
-
-      const today =
-        new Date();
-
-      today.setHours(
-        0,0,0,0
-      );
-
-      const validDays =
-        data.forecast.forecastday.filter(
-          day => {
-
-            const d =
-              new Date(day.date);
-
-            d.setHours(
-              0,0,0,0
-            );
-
-            return d >= today;
-
-          }
-        );
-
-      validDays.forEach(
+      data.forecast.forecastday.forEach(
         (day, index) => {
 
           const card =
@@ -277,8 +259,8 @@ async function render() {
 
           card.innerHTML = `
             <div class="day-name">
-              ${formatDay(day.date)}
-              ${formatDate(day.date)}
+              ${getDayName(day.date)}
+              ${getShortDate(day.date)}
             </div>
 
             <div class="icon">

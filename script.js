@@ -21,56 +21,14 @@ document
 
 const MAX_CITIES = 7;
 
-const stateMap = {
-  Alabama:"AL", Alaska:"AK", Arizona:"AZ",
-  Arkansas:"AR", California:"CA",
-  Colorado:"CO", Connecticut:"CT",
-  Delaware:"DE", Florida:"FL",
-  Georgia:"GA", Hawaii:"HI",
-  Idaho:"ID", Illinois:"IL",
-  Indiana:"IN", Iowa:"IA",
-  Kansas:"KS", Kentucky:"KY",
-  Louisiana:"LA", Maine:"ME",
-  Maryland:"MD", Massachusetts:"MA",
-  Michigan:"MI", Minnesota:"MN",
-  Mississippi:"MS", Missouri:"MO",
-  Montana:"MT", Nebraska:"NE",
-  Nevada:"NV", "New Hampshire":"NH",
-  "New Jersey":"NJ", "New Mexico":"NM",
-  "New York":"NY", "North Carolina":"NC",
-  "North Dakota":"ND", Ohio:"OH",
-  Oklahoma:"OK", Oregon:"OR",
-  Pennsylvania:"PA", "Rhode Island":"RI",
-  "South Carolina":"SC",
-  "South Dakota":"SD",
-  Tennessee:"TN", Texas:"TX",
-  Utah:"UT", Vermont:"VT",
-  Virginia:"VA", Washington:"WA",
-  "West Virginia":"WV",
-  Wisconsin:"WI", Wyoming:"WY"
-};
+const WEATHER_API_KEY =
+  '74b32e01f9b5486eaf413100262805';
+
+let sortableInstance = null;
 
 let cities = JSON.parse(
   localStorage.getItem('weatherCities') || '[]'
 );
-
-const weatherIcons = {
-  0:"☀️",
-  1:"🌤️",
-  2:"⛅",
-  3:"☁️",
-  45:"🌫️",
-  48:"🌫️",
-  51:"🌦️",
-  61:"🌧️",
-  63:"🌧️",
-  65:"🌧️",
-  71:"❄️",
-  80:"🌦️",
-  95:"⛈️"
-};
-
-let sortableInstance = null;
 
 function saveCities() {
 
@@ -81,31 +39,16 @@ function saveCities() {
 
 }
 
-function getStateAbbr(state) {
-
-  return stateMap[state] || state || '';
-
-}
-
 async function searchCities(query) {
 
-  if (query.length < 2) return [];
+  if (query.length < 2) {
+
+    return [];
+
+  }
 
   const url =
-    `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=8`;
-
-  const res = await fetch(url);
-
-  const data = await res.json();
-
-  return data.results || [];
-
-}
-
-async function forecast(lat, lon, timezone) {
-
-  const url =
-    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&hourly=relative_humidity_2m,temperature_2m,windspeed_10m&temperature_unit=fahrenheit&windspeed_unit=mph&timezone=${timezone}&forecast_days=11&models=hrrr`;
+    `https://api.weatherapi.com/v1/search.json?key=${WEATHER_API_KEY}&q=${encodeURIComponent(query)}`;
 
   const res = await fetch(url);
 
@@ -113,72 +56,21 @@ async function forecast(lat, lon, timezone) {
 
 }
 
-function getPeakHumidity(dayIndex, hourly) {
+async function forecast(query) {
 
-  const start = dayIndex * 24;
-  const end = start + 24;
+  const url =
+    `https://api.weatherapi.com/v1/forecast.json?key=${WEATHER_API_KEY}&q=${query}&days=10&aqi=no&alerts=no`;
 
-  let maxTemp = -999;
-  let humidity = 0;
-  let wind = 0;
+  const res = await fetch(url);
 
-  for (let i = start; i < end; i++) {
-
-    const temp =
-      hourly.temperature_2m[i];
-
-    if (temp > maxTemp) {
-
-      maxTemp = temp;
-
-      humidity =
-        hourly.relative_humidity_2m[i];
-
-      wind =
-        hourly.windspeed_10m[i];
-
-    }
-
-  }
-
-  return {
-    humidity,
-    wind
-  };
+  return await res.json();
 
 }
 
-function shortDay(dateStr) {
-
-  return new Date(dateStr)
-    .toLocaleDateString(
-      'en-US',
-      { weekday: 'short' }
-    );
-
-}
-
-function shortDate(dateStr) {
-
-  return new Date(dateStr)
-    .toLocaleDateString(
-      'en-US',
-      {
-        month: 'numeric',
-        day: 'numeric'
-      }
-    );
-
-}
-
-function deleteCity(lat, lon) {
+function deleteCity(id) {
 
   cities = cities.filter(
-    c =>
-      !(
-        c.lat === lat &&
-        c.lon === lon
-      )
+    c => c.id !== id
   );
 
   saveCities();
@@ -248,19 +140,13 @@ async function render() {
 
     try {
 
-      const data = await forecast(
-        city.lat,
-        city.lon,
-        city.timezone
-      );
+      const data =
+        await forecast(city.query);
 
       const row =
         document.createElement('div');
 
       row.className = 'forecast-row';
-
-      row.dataset.lat = city.lat;
-      row.dataset.lon = city.lon;
 
       const cityCol =
         document.createElement('div');
@@ -270,20 +156,19 @@ async function render() {
       cityCol.innerHTML = `
         <button
           class="delete-btn"
-          data-lat="${city.lat}"
-          data-lon="${city.lon}"
+          data-id="${city.id}"
           type="button"
         >
           ✕
         </button>
 
         <div class="city-name">
-          ${city.name}${city.state ? ', ' + city.state : ''}
+          ${city.name}
         </div>
 
         <div class="current-temp">
           ${Math.round(
-            data.current_weather.temperature
+            data.current.temp_f
           )}°
         </div>
 
@@ -302,76 +187,88 @@ async function render() {
 
       daysRow.className = 'days-row';
 
-      for (let i = 1; i < 11; i++) {
+      data.forecast.forecastday.forEach(
+        (day, index) => {
 
-        const extra =
-          getPeakHumidity(
-            i,
-            data.hourly
-          );
+          const card =
+            document.createElement('div');
 
-        const code =
-          data.daily.weathercode[i];
+          card.className =
+            'day-card';
 
-        const card =
-          document.createElement('div');
+          if (index === 0) {
 
-        card.className = 'day-card';
+            card.classList.add(
+              'today-card'
+            );
 
-        if (i === 1) {
+          }
 
-          card.classList.add(
-            'today-card'
-          );
+          const date =
+            new Date(day.date);
+
+          const dayName =
+            date.toLocaleDateString(
+              'en-US',
+              { weekday: 'short' }
+            );
+
+          const shortDate =
+            date.toLocaleDateString(
+              'en-US',
+              {
+                month: 'numeric',
+                day: 'numeric'
+              }
+            );
+
+          card.innerHTML = `
+            <div class="day-name">
+              ${dayName}
+              ${shortDate}
+            </div>
+
+            <div class="icon">
+              <img
+                src="https:${day.day.condition.icon}"
+                alt=""
+              >
+            </div>
+
+            <div class="temps">
+              ${Math.round(
+                day.day.maxtemp_f
+              )}°
+              /
+              ${Math.round(
+                day.day.mintemp_f
+              )}°
+            </div>
+
+            <div class="metric rain">
+              💧
+              ${day.day.daily_chance_of_rain}%
+            </div>
+
+            <div class="metric wind">
+              🌬
+              ${Math.round(
+                day.day.maxwind_mph
+              )} mph
+            </div>
+
+            <div class="metric humidity">
+              H
+              ${Math.round(
+                day.day.avghumidity
+              )}%
+            </div>
+          `;
+
+          daysRow.appendChild(card);
 
         }
-
-        card.innerHTML = `
-          <div class="day-name">
-            ${shortDay(
-              data.daily.time[i]
-            )}
-
-            ${shortDate(
-              data.daily.time[i]
-            )}
-          </div>
-
-          <div class="icon">
-            ${weatherIcons[code] || "🌤️"}
-          </div>
-
-          <div class="temps">
-            ${Math.round(
-              data.daily.temperature_2m_max[i]
-            )}°
-
-            /
-
-            ${Math.round(
-              data.daily.temperature_2m_min[i]
-            )}°
-          </div>
-
-          <div class="metric rain">
-            💧
-            ${data.daily.precipitation_probability_max[i]}%
-          </div>
-
-          <div class="metric wind">
-            🌬
-            ${Math.round(extra.wind)} mph
-          </div>
-
-          <div class="metric humidity">
-            H
-            ${Math.round(extra.humidity)}%
-          </div>
-        `;
-
-        daysRow.appendChild(card);
-
-      }
+      );
 
       row.appendChild(cityCol);
 
@@ -404,8 +301,7 @@ async function render() {
           event.stopPropagation();
 
           deleteCity(
-            Number(btn.dataset.lat),
-            Number(btn.dataset.lon)
+            btn.dataset.id
           );
 
         }
@@ -449,12 +345,6 @@ async function render() {
       delay: 150,
 
       delayOnTouchOnly: true,
-
-      ghostClass:
-        'sortable-ghost',
-
-      chosenClass:
-        'sortable-chosen',
 
       onEnd: evt => {
 
@@ -504,17 +394,8 @@ cityInput.addEventListener(
       div.className =
         'suggestion-item';
 
-      const state =
-        getStateAbbr(
-          result.admin1
-        );
-
-      const label =
-        state
-          ? `${result.name}, ${state}`
-          : result.name;
-
-      div.textContent = label;
+      div.textContent =
+        `${result.name}, ${result.region}`;
 
       div.addEventListener(
         'click',
@@ -522,18 +403,17 @@ cityInput.addEventListener(
 
           addCity({
 
-            name: result.name,
+            id: crypto.randomUUID(),
 
-            state: state,
+            name:
+              `${result.name}, ${result.region}`,
 
-            lat:
-              result.latitude,
+            query:
+              `${result.lat},${result.lon}`,
 
-            lon:
-              result.longitude,
+            lat: result.lat,
 
-            timezone:
-              result.timezone
+            lon: result.lon
 
           });
 
@@ -601,25 +481,21 @@ locationBtn.addEventListener(
         const lon =
           position.coords.longitude;
 
-        const city = {
+        addCity({
+
+          id: crypto.randomUUID(),
 
           name:
             '📍 My Location',
 
-          state: '',
+          query:
+            `${lat},${lon}`,
 
           lat: lat,
 
-          lon: lon,
+          lon: lon
 
-          timezone:
-            Intl.DateTimeFormat()
-              .resolvedOptions()
-              .timeZone
-
-        };
-
-        addCity(city);
+        });
 
       },
 

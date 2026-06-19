@@ -294,3 +294,55 @@ button {
 .sortable-chosen {
   transform: scale(1.02);
 }
+
+.loading-card {
+  width: 95px;
+  min-width: 95px;
+  padding: 10px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  opacity: 0.5;
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.7; }
+}
+
+.error-card {
+  width: 100%;
+  padding: 14px 10px;
+  display: flex;
+  align-items: center;
+  font-size: 0.76rem;
+  color: #fca5a5;
+  line-height: 1.35;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 70px 24px;
+  opacity: 0.85;
+}
+
+.empty-state-icon {
+  font-size: 2.6rem;
+  margin-bottom: 12px;
+}
+
+.empty-state-text {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.empty-state-subtext {
+  font-size: 0.85rem;
+  opacity: 0.7;
+  max-width: 280px;
+  margin: 0 auto;
+  line-height: 1.4;
+}

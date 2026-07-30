@@ -327,11 +327,12 @@ function buildCityColInner(city, currentTempF) {
       : `${Math.round(currentTempF)}°`;
 
   return `
-    <button class="delete-btn" type="button">✕</button>
-
     <div class="city-name">${escapeHtml(city.name)}</div>
 
-    <div class="current-temp">${tempDisplay}</div>
+    <div class="temp-row">
+      <div class="current-temp">${tempDisplay}</div>
+      <button class="delete-btn" type="button">✕</button>
+    </div>
 
     <button class="radar-btn" type="button">RADAR</button>
   `;

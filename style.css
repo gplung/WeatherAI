@@ -1,3 +1,7 @@
+:root {
+  --sticky-offset: 0px;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -165,10 +169,82 @@ button {
     rgba(59,130,246,0.18);
 }
 
-.day-name {
+/* Alternating column shading for readability. Each row's day-cards
+   (and the header's day-header-cards) always have the same count in
+   the same order, so nth-child(even) lines up as a consistent
+   vertical stripe down every column. */
+.day-card:nth-child(even),
+.day-header-card:nth-child(even) {
+  background:
+    rgba(255,255,255,0.035);
+}
+
+/* ============================================================
+   Shared day-of-week / date header row
+   Sticky under the app header, scrolls horizontally in sync with
+   the city rows since it lives in the same master-scroll wrapper.
+   ============================================================ */
+
+.day-header-row {
+  display: flex;
+
+  position: sticky;
+  top: var(--sticky-offset);
+  z-index: 60;
+}
+
+.day-header-corner {
+  width: 95px;
+  min-width: 95px;
+
+  position: sticky;
+  left: 0;
+  z-index: 61;
+
+  background: #1e293b;
+
+  border-top-left-radius: 12px;
+
+  border-right:
+    1px solid rgba(255,255,255,0.08);
+
+  border-bottom:
+    1px solid rgba(255,255,255,0.15);
+
+  box-shadow:
+    6px 0 10px rgba(0,0,0,0.25);
+}
+
+.day-header-cells {
+  display: flex;
+
+  background: #1e293b;
+
+  border-top-right-radius: 12px;
+
+  border-bottom:
+    1px solid rgba(255,255,255,0.15);
+
+  overflow: hidden;
+}
+
+.day-header-card {
+  width: 95px;
+  min-width: 95px;
+
+  padding: 10px 8px;
+
   font-size: 0.74rem;
-  opacity: 0.82;
-  margin-bottom: 4px;
+  font-weight: 700;
+  text-align: center;
+
+  border-right:
+    1px solid rgba(255,255,255,0.08);
+}
+
+.today-header {
+  background:
+    rgba(59,130,246,0.22);
 }
 
 .icon {

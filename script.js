@@ -21,8 +21,11 @@ document
 
 const MAX_CITIES = 7;
 
-const WEATHER_API_KEY =
-  '74b32e01f9b5486eaf413100262805';
+/*
+  Weather provider: Open-Meteo (api.open-meteo.com + geocoding-api.open-meteo.com)
+  No API key required, no signup, no embedded-key exposure risk.
+  Free tier: 10,000 calls/day, non-commercial use.
+*/
 
 let sortableInstance = null;
 
@@ -86,6 +89,48 @@ function setCachedForecast(query, data) {
 }
 
 /* ============================================================
+   Weather code -> emoji icon
+   Open-Meteo returns a numeric WMO weather code instead of a
+   hosted icon image. This maps codes to a representative emoji.
+   Reference: https://open-meteo.com/en/docs (WMO Weather codes)
+   ============================================================ */
+
+const WEATHER_ICON_MAP = {
+  0: '☀️',
+  1: '🌤️',
+  2: '⛅',
+  3: '☁️',
+  45: '🌫️',
+  48: '🌫️',
+  51: '🌦️',
+  53: '🌦️',
+  55: '🌦️',
+  56: '🌧️',
+  57: '🌧️',
+  61: '🌧️',
+  63: '🌧️',
+  65: '🌧️',
+  66: '🌧️',
+  67: '🌧️',
+  71: '🌨️',
+  73: '🌨️',
+  75: '🌨️',
+  77: '🌨️',
+  80: '🌦️',
+  81: '🌦️',
+  82: '⛈️',
+  85: '🌨️',
+  86: '🌨️',
+  95: '⛈️',
+  96: '⛈️',
+  99: '⛈️'
+};
+
+function getWeatherIcon(code) {
+  return WEATHER_ICON_MAP[code] || '🌡️';
+}
+
+/* ============================================================
    API calls
    ============================================================ */
 
@@ -95,20 +140,73 @@ async function searchCities(query) {
   }
 
   const url =
-    `https://api.weatherapi.com/v1/search.json?key=${WEATHER_API_KEY}&q=${encodeURIComponent(query)}`;
+    `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=8&language=en&format=json`;
+
+  const res = await fetch(url);
+  const data = await res.json();
+
+  if (!data.results) {
+    return [];
+  }
+
+  // Normalize to the shape the rest of the app already expects
+  // (name, region, lat, lon) so autocomplete/select code is untouched.
+  return data.results.map(r => ({
+    name: r.name,
+    region: r.admin1 || r.country || '',
+    lat: r.latitude,
+    lon: r.longitude
+  }));
+}
+
+async function forecast(query) {
+  const [lat, lon] = query.split(',');
+
+  const url =
+    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
+    `&current=temperature_2m` +
+    `&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max,relative_humidity_2m_mean` +
+    `&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto&forecast_days=10`;
 
   const res = await fetch(url);
 
   return await res.json();
 }
 
-async function forecast(query) {
-  const url =
-    `https://api.weatherapi.com/v1/forecast.json?key=${WEATHER_API_KEY}&q=${query}&days=10&aqi=no&alerts=no`;
+/*
+  Open-Meteo has no reverse-geocoding endpoint (coords -> city name),
+  so Current Location name resolution uses BigDataCloud's free,
+  keyless, client-side reverse-geocode API. This is purely cosmetic
+  (renames "📍 My Location" to the resolved city) and fails silently
+  if unreachable — it never blocks or breaks the forecast itself.
+*/
 
-  const res = await fetch(url);
+async function resolveCurrentLocationName(city) {
 
-  return await res.json();
+  if (!city.isCurrentLocation || city.name !== '📍 My Location') {
+    return;
+  }
+
+  try {
+
+    const url =
+      `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${city.lat}&longitude=${city.lon}&localityLanguage=en`;
+
+    const res = await fetch(url);
+    const data = await res.json();
+
+    const resolved = data.city || data.locality;
+
+    if (resolved) {
+      city.name = `📍 ${resolved}`;
+      saveCities();
+    }
+
+  } catch (err) {
+    console.error('Failed to resolve current location name', err);
+    // Non-critical: keep the "📍 My Location" label
+  }
+
 }
 
 function deleteCity(id) {
@@ -205,9 +303,9 @@ function getShortDate(dateString) {
 
 /* ============================================================
    Defensive HTML escaping
-   City names / icon paths come from the API and are inserted via
-   innerHTML for layout convenience. This neutralizes any HTML
-   special characters before insertion.
+   City names come from the API and are inserted via innerHTML for
+   layout convenience. This neutralizes any HTML special characters
+   before insertion.
    ============================================================ */
 
 function escapeHtml(value) {
@@ -282,12 +380,14 @@ function buildSkeletonRow(city) {
 
 function fillRow(refs, city, data) {
 
-  refs.cityCol.innerHTML = buildCityColInner(city, data.current.temp_f);
+  refs.cityCol.innerHTML = buildCityColInner(city, data.current.temperature_2m);
   attachCityColListeners(refs.cityCol, city);
 
   refs.daysRow.innerHTML = '';
 
-  data.forecast.forecastday.forEach((day, index) => {
+  const daily = data.daily;
+
+  daily.time.forEach((date, index) => {
 
     const card = document.createElement('div');
     card.className = 'day-card';
@@ -298,27 +398,27 @@ function fillRow(refs, city, data) {
 
     card.innerHTML = `
       <div class="day-name">
-        ${getDayName(day.date)} ${getShortDate(day.date)}
+        ${getDayName(date)} ${getShortDate(date)}
       </div>
 
       <div class="icon">
-        <img src="https:${escapeHtml(day.day.condition.icon)}" alt="" />
+        ${getWeatherIcon(daily.weathercode[index])}
       </div>
 
       <div class="temps">
-        ${Math.round(day.day.maxtemp_f)}° / ${Math.round(day.day.mintemp_f)}°
+        ${Math.round(daily.temperature_2m_max[index])}° / ${Math.round(daily.temperature_2m_min[index])}°
       </div>
 
       <div class="metric rain">
-        💧 ${day.day.daily_chance_of_rain}%
+        💧 ${Math.round(daily.precipitation_probability_max[index])}%
       </div>
 
       <div class="metric wind">
-        🌬 ${Math.round(day.day.maxwind_mph)} mph
+        🌬 ${Math.round(daily.wind_speed_10m_max[index])} mph
       </div>
 
       <div class="metric humidity">
-        H ${Math.round(day.day.avghumidity)}%
+        H ${Math.round(daily.relative_humidity_2m_mean[index])}%
       </div>
     `;
 
@@ -342,33 +442,48 @@ function showRowError(refs, city, message) {
 async function fetchAndFillCity(city, refs) {
   try {
 
-    let data = getCachedForecast(city.query);
-    const fromCache = !!data;
+    const forecastPromise = (async () => {
 
-    if (!data) {
-      data = await forecast(city.query);
-    }
+      let data = getCachedForecast(city.query);
+      const fromCache = !!data;
+
+      if (!data) {
+        data = await forecast(city.query);
+      }
+
+      return { data, fromCache };
+
+    })();
+
+    // Resolve the Current Location display name in parallel with the
+    // forecast fetch, so both settle before the row is filled in.
+    const namePromise = resolveCurrentLocationName(city);
+
+    const [{ data, fromCache }] = await Promise.all([
+      forecastPromise,
+      namePromise
+    ]);
 
     if (data.error) {
       showRowError(
         refs,
         city,
-        data.error.message || 'Unable to load forecast for this location'
+        data.reason || 'Unable to load forecast for this location'
+      );
+      return;
+    }
+
+    if (!data.daily || !data.current) {
+      showRowError(
+        refs,
+        city,
+        'Unable to load forecast for this location'
       );
       return;
     }
 
     if (!fromCache) {
       setCachedForecast(city.query, data);
-    }
-
-    if (city.isCurrentLocation && data.location && data.location.name) {
-      const resolvedName = `📍 ${data.location.name}`;
-
-      if (city.name !== resolvedName) {
-        city.name = resolvedName;
-        saveCities();
-      }
     }
 
     fillRow(refs, city, data);

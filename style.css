@@ -135,7 +135,13 @@ button {
   font-weight: 700;
   line-height: 1.15;
   margin-bottom: 6px;
-  padding-right: 24px;
+}
+
+.temp-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
 }
 
 .current-temp {
@@ -273,10 +279,6 @@ button {
 }
 
 .delete-btn {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-
   background:
     rgba(255,255,255,0.12);
 
@@ -286,6 +288,7 @@ button {
 
   width: 22px;
   height: 22px;
+  flex-shrink: 0;
 
   border-radius: 50%;
 
@@ -294,8 +297,6 @@ button {
   cursor: pointer;
 
   padding: 0;
-
-  z-index: 1;
 }
 
 .delete-btn:hover {

@@ -367,8 +367,8 @@ function attachCityColListeners(cityColEl, city) {
 
 function buildDayHeaderRow() {
 
-  const row = document.createElement('div');
-  row.className = 'day-header-row';
+  const outer = document.createElement('div');
+  outer.className = 'day-header-outer';
 
   const corner = document.createElement('div');
   corner.className = 'day-header-corner';
@@ -377,10 +377,10 @@ function buildDayHeaderRow() {
   cells.className = 'day-header-cells';
   cells.innerHTML = `<div class="day-header-card">—</div>`;
 
-  row.appendChild(corner);
-  row.appendChild(cells);
+  outer.appendChild(corner);
+  outer.appendChild(cells);
 
-  return { row, cells };
+  return { outer, cells };
 
 }
 
@@ -595,16 +595,16 @@ async function doRender() {
     return;
   }
 
+  const dayHeader = buildDayHeaderRow();
+  container.appendChild(dayHeader.outer);
+
+  const headerState = { cellsEl: dayHeader.cells, filled: false };
+
   const scroll = document.createElement('div');
   scroll.className = 'master-scroll';
 
   const wrapper = document.createElement('div');
   wrapper.className = 'rows-wrapper';
-
-  const dayHeader = buildDayHeaderRow();
-  wrapper.appendChild(dayHeader.row);
-
-  const headerState = { cellsEl: dayHeader.cells, filled: false };
 
   const rowRefs = [];
 
@@ -616,6 +616,15 @@ async function doRender() {
 
   scroll.appendChild(wrapper);
   container.appendChild(scroll);
+
+  // The day-header row lives outside the scrolling container (so it
+  // isn't a sticky-positioning ambiguity and isn't picked up by
+  // SortableJS as a draggable "city"). Its horizontal position is
+  // instead kept in sync with the city rows via a transform driven
+  // by the scroll event, the standard frozen-header technique.
+  scroll.addEventListener('scroll', () => {
+    dayHeader.cells.style.transform = `translateX(-${scroll.scrollLeft}px)`;
+  });
 
   updateStickyOffset();
 

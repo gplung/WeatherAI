@@ -116,7 +116,7 @@ button {
 
   background: #1e293b;
 
-  padding: 10px 6px;
+  padding: 10px 6px 4px;
 
   border-top-left-radius: 12px;
   border-bottom-left-radius: 12px;
@@ -165,7 +165,7 @@ button {
   width: 95px;
   min-width: 95px;
 
-  padding: 10px 8px;
+  padding: 4px 8px 10px;
 
   border-right:
     1px solid rgba(255,255,255,0.08);

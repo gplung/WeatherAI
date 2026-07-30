@@ -185,21 +185,19 @@ button {
    the city rows since it lives in the same master-scroll wrapper.
    ============================================================ */
 
-.day-header-row {
+.day-header-outer {
   display: flex;
 
   position: sticky;
   top: var(--sticky-offset);
   z-index: 60;
+
+  overflow: hidden;
 }
 
 .day-header-corner {
   width: 95px;
   min-width: 95px;
-
-  position: sticky;
-  left: 0;
-  z-index: 61;
 
   background: #1e293b;
 
@@ -224,8 +222,6 @@ button {
 
   border-bottom:
     1px solid rgba(255,255,255,0.15);
-
-  overflow: hidden;
 }
 
 .day-header-card {

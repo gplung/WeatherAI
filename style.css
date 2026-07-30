@@ -141,7 +141,7 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 8px;
+  margin-bottom: 0px;
 }
 
 .current-temp {
@@ -165,7 +165,7 @@ button {
   width: 95px;
   min-width: 95px;
 
-  padding: 0 8px 10px;
+  padding: 0 8px 1px;
 
   border-right:
     1px solid rgba(255,255,255,0.08);
@@ -252,12 +252,12 @@ button {
 
 .icon {
   font-size: 1.45rem;
-  margin: 0 0 4px;
+  margin: 0 0 2px;
 }
 
 .temps {
   font-weight: 700;
-  margin-bottom: 6px;
+  margin-bottom: 2px;
 }
 
 .metric {

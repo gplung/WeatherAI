@@ -356,6 +356,72 @@ function attachCityColListeners(cityColEl, city) {
 
 }
 
+/* ============================================================
+   Shared day-of-week / date header row
+   Instead of repeating the day name and date inside every city's
+   day-card, a single frozen row up top shows it once. It's sticky
+   (pinned just below the app header) and scrolls horizontally in
+   sync with the city rows because it lives inside the same
+   master-scroll wrapper.
+   ============================================================ */
+
+function buildDayHeaderRow() {
+
+  const row = document.createElement('div');
+  row.className = 'day-header-row';
+
+  const corner = document.createElement('div');
+  corner.className = 'day-header-corner';
+
+  const cells = document.createElement('div');
+  cells.className = 'day-header-cells';
+  cells.innerHTML = `<div class="day-header-card">—</div>`;
+
+  row.appendChild(corner);
+  row.appendChild(cells);
+
+  return { row, cells };
+
+}
+
+function fillDayHeaderRow(headerCellsEl, dailyTime) {
+
+  headerCellsEl.innerHTML = '';
+
+  dailyTime.forEach((date, index) => {
+
+    const cell = document.createElement('div');
+    cell.className = 'day-header-card';
+
+    if (index === 0) {
+      cell.classList.add('today-header');
+    }
+
+    cell.innerHTML = `${getDayName(date)} ${getShortDate(date)}`;
+
+    headerCellsEl.appendChild(cell);
+
+  });
+
+}
+
+/*
+  Keeps the day-header row pinned directly under the app header
+  (rather than at a hardcoded pixel value) so it stays correct if
+  the header's height ever changes (font scaling, wrapped hint
+  text, etc). Re-measured on load and on resize/orientation change.
+*/
+function updateStickyOffset() {
+  const headerEl = document.querySelector('header');
+
+  if (headerEl) {
+    document.documentElement.style.setProperty(
+      '--sticky-offset',
+      `${headerEl.offsetHeight}px`
+    );
+  }
+}
+
 function buildSkeletonRow(city) {
 
   const row = document.createElement('div');
@@ -397,10 +463,6 @@ function fillRow(refs, city, data) {
     }
 
     card.innerHTML = `
-      <div class="day-name">
-        ${getDayName(date)} ${getShortDate(date)}
-      </div>
-
       <div class="icon">
         ${getWeatherIcon(daily.weathercode[index])}
       </div>
@@ -439,7 +501,7 @@ function showRowError(refs, city, message) {
 
 }
 
-async function fetchAndFillCity(city, refs) {
+async function fetchAndFillCity(city, refs, headerState) {
   try {
 
     const forecastPromise = (async () => {
@@ -484,6 +546,14 @@ async function fetchAndFillCity(city, refs) {
 
     if (!fromCache) {
       setCachedForecast(city.query, data);
+    }
+
+    // Fill the shared day-header row exactly once, from whichever
+    // city's forecast comes back first. All cities request the same
+    // forecast_days with timezone=auto, so their date sequences line up.
+    if (headerState && !headerState.filled) {
+      fillDayHeaderRow(headerState.cellsEl, data.daily.time);
+      headerState.filled = true;
     }
 
     fillRow(refs, city, data);
@@ -531,6 +601,11 @@ async function doRender() {
   const wrapper = document.createElement('div');
   wrapper.className = 'rows-wrapper';
 
+  const dayHeader = buildDayHeaderRow();
+  wrapper.appendChild(dayHeader.row);
+
+  const headerState = { cellsEl: dayHeader.cells, filled: false };
+
   const rowRefs = [];
 
   for (const city of cities) {
@@ -541,6 +616,8 @@ async function doRender() {
 
   scroll.appendChild(wrapper);
   container.appendChild(scroll);
+
+  updateStickyOffset();
 
   sortableInstance = new Sortable(wrapper, {
 
@@ -561,7 +638,7 @@ async function doRender() {
   // Each call handles its own errors internally and never rejects,
   // so one bad city can't block the others from loading.
   await Promise.all(
-    rowRefs.map(({ city, refs }) => fetchAndFillCity(city, refs))
+    rowRefs.map(({ city, refs }) => fetchAndFillCity(city, refs, headerState))
   );
 
 }
@@ -742,4 +819,7 @@ locationBtn.addEventListener('click', () => {
 
 });
 
+window.addEventListener('resize', updateStickyOffset);
+
+updateStickyOffset();
 render();
